@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -38,7 +39,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return response()->json(['message' => 'Login successful']);
+        return response()->json(['message' => 'login successful', "user" => new UserResource($request->user())], 200);
 
     }
 
@@ -71,7 +72,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return response()->json(['message' => 'Login successful']);
+        return response()->json(['message' => 'register successful', "user" => new UserResource($request->user())], 200);
     }
 
     public function logout(Request $request)
