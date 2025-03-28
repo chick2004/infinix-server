@@ -6,6 +6,7 @@ use App\Http\Resources\PostResource;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class PostController extends Controller
 {
@@ -24,13 +25,15 @@ class PostController extends Controller
     public function store(Request $request)
     {
 
+        Log::info(json_encode($request->all()));
+
         $validator = Validator::make($request->all(), [
             'content' => 'required|string',
             'visibility' => 'required|in:public,private',
             'is_shared' => 'required|boolean',
             'shared_post_id' => 'nullable|exists:posts,id',
             'medias' => 'nullable|array',
-            'medias.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,webm,ogg,mp3,wav,flac,txt,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar|max:20000',
+            'medias.*' => 'nullable|file',
         ]);
 
         if ($validator->fails()) {
@@ -68,7 +71,9 @@ class PostController extends Controller
             }
         }
 
-        return new PostResource($post);
+        return response()->json([
+            'message' => 'Post created successfully'
+        ], 200);
     }
 
     public function update(Request $request, $id)

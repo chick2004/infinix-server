@@ -89,6 +89,7 @@ class AuthController extends Controller
 
     public function send_verification_code(Request $request)
     {
+        Log::info($request->all());
 
         $request->validate([
             'email' => 'required|email',

@@ -13,7 +13,7 @@ use App\Http\Controllers\MessageController;
 
 use Illuminate\Support\Facades\Log;
 
-Route::middleware('guest')->group(function () {
+Route::middleware('web')->group(function () {
 
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
