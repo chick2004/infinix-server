@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Message;
 use App\Http\Resources\MessageResource;
+use Illuminate\Support\Facades\Storage;
 
 class MessageController extends Controller
 {
@@ -36,7 +37,7 @@ class MessageController extends Controller
                 $media_path = $media->storeAs('uploads', $media_name, 'public');
                 $message->medias()->create([
                     'message_id' => $message->id,
-                    'path' => $media_path,
+                    'path' => Storage::url($media_path),
                     'type' => $media->getMimeType(),
                 ]);
             }

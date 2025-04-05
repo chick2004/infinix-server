@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Post;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -29,8 +30,8 @@ class PostController extends Controller
 
         $validator = Validator::make($request->all(), [
             'content' => 'required|string',
-            'visibility' => 'required|in:public,private',
-            'is_shared' => 'required|boolean',
+            'visibility' => 'nullable|in:public,private,friends',
+            'is_shared' => 'nullable|boolean',
             'shared_post_id' => 'nullable|exists:posts,id',
             'medias' => 'nullable|array',
             'medias.*' => 'nullable|file',
@@ -65,7 +66,7 @@ class PostController extends Controller
                 $media_path = $media->storeAs('uploads', $media_name, 'public');
                 $post->medias()->create([
                     'post_id' => $post->id,
-                    'path' => $media_path,
+                    'path' => Storage::url($media_path),
                     'type' => $media->getMimeType(),
                 ]);
             }
@@ -103,7 +104,7 @@ class PostController extends Controller
                 $media_path = $media->storeAs('uploads', $media_name, 'public');
                 $post->medias()->create([
                     'post_id' => $post->id,
-                    'path' => $media_path,
+                    'path' => Storage::url($media_path),
                     'type' => $media->getMimeType(),
                 ]);
 

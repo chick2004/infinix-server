@@ -6,6 +6,7 @@ use App\Http\Resources\CommentResource;
 use Illuminate\Http\Request;
 use App\Models\Comment;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class CommentController extends Controller
 {
@@ -46,7 +47,7 @@ class CommentController extends Controller
                 $media_path = $media->storeAs('uploads', $media_name, 'public');
                 $comment->medias()->create([
                     'post_id' => $comment->id,
-                    'path' => $media_path,
+                    'path' => Storage::url($media_path),
                     'type' => $media->getMimeType(),
                 ]);
             }

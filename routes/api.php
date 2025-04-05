@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -10,10 +11,13 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FriendRequestController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\MediaController;
 
 use Illuminate\Support\Facades\Log;
 
-Route::middleware('web')->group(function () {
+Route::middleware('guest')->group(function () {
+
+    Route::get('/media/{path}', [MediaController::class, 'media'])->where('path', '.*');
 
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
@@ -32,9 +36,8 @@ Route::middleware('web')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'change_password']);
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    
+    Route::get('/user', [AuthController::class, 'user']);
 
     Route::get('/posts', [PostController::class, 'index']);
     Route::get('/posts/{id}', [PostController::class, 'show']);
