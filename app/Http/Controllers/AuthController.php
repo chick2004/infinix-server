@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-    public function user(Request $request)
+    public function user(Request $request) 
     {
         return response()->json([
             "message" => "User data",
