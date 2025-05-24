@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->boolean('is_shared')->default(false);
             $table->foreignId('shared_post_id')->nullable()->default(null)->constrained('posts')->onDelete('set null');
-            $table->text('content')->default('');
+            $table->text('content')->nullable()->default(null);
             $table->enum('visibility', ['public', 'private', 'friends'])->default('public');
             $table->timestamps();
             $table->softDeletes();
