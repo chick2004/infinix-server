@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\PostTag;
+use App\Models\Tag;
 
-class PostTagController extends Controller
+class TagController extends Controller
 {
     public function index()
     {
-        $tags = PostTag::select('tag')
+        $tags = Tag::select('tag')
             ->selectRaw('count(tag) as count')
             ->groupBy('tag')
             ->orderBy('count', 'desc')

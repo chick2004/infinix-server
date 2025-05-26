@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
+use App\Models\Tag;
+
 class PostController extends Controller
 {
     public function index()
@@ -29,7 +31,7 @@ class PostController extends Controller
         Log::info(json_encode($request->all()));
 
         $validator = Validator::make($request->all(), [
-            'content' => 'required|string',
+            'content' => 'nullable|string',
             'visibility' => 'nullable|in:public,private,friends',
             'is_shared' => 'nullable|boolean',
             'shared_post_id' => 'nullable|exists:posts,id',
@@ -38,6 +40,9 @@ class PostController extends Controller
         ]);
 
         if ($validator->fails()) {
+            info('Validation failed', [
+                'errors' => $validator->errors()
+            ]);
             return response()->json([
                 'errors' => $validator->errors()
             ], 400);
@@ -50,13 +55,10 @@ class PostController extends Controller
         $post = Post::create($post_data);
 
         preg_match_all('/#\w+/', $request->input('content'), $matches);
-        $tags = $matches[0];
-        foreach ($tags as $tag) {
-            $tag = str_replace('#', '', $tag);
-            $post->tags()->create([
-                'post_id' => $post->id,
-                'tag' => $tag,
-            ]);
+        $tag_list = $matches[0];
+        foreach ($tag_list as $tag_item) {
+            $tag = Tag::firstOrCreate(['name' => str_replace('#', '', $tag_item)]);
+            $post->tags()->attach($tag->id);
         }
 
         if ($request->hasFile('medias')) {
@@ -85,13 +87,10 @@ class PostController extends Controller
         $post->tags()->delete();
 
         preg_match_all('/#\w+/', $request->input('content'), $matches);
-        $tags = $matches[0];
-        foreach ($tags as $tag) {
-            $tag = str_replace('#', '', $tag);
-            $post->tags()->create([
-                'post_id' => $post->id,
-                'tag' => $tag,
-            ]);
+        $tag_list = $matches[0];
+        foreach ($tag_list as $tag_item) {
+            $tag = Tag::firstOrCreate(['name' => str_replace('#', '', $tag_item)]);
+            $post->tags()->attach($tag->id);
         }
 
         if ($request->has('medias')) {

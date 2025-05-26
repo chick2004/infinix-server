@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
-use App\Http\Controllers\PostTagController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FriendRequestController;
 use App\Http\Controllers\ConversationController;
@@ -47,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/posts/{id}/force', [PostController::class, 'force_destroy']);
     Route::post('/posts/{id}/restore', [PostController::class, 'restore']);
     
-    Route::get('/tags', [PostTagController::class, 'index']);
+    Route::get('/tags', [TagController::class, 'index']);
     Route::get('/tags/{tag}/posts', [PostController::class, 'by_tag']);
 
     Route::post('/users/{id}/posts', [PostController::class, 'by_user']);

@@ -23,9 +23,9 @@ class PostResource extends JsonResource
         $data['deleted_at'] = $this->deleted_at?->format('Y-m-d H:i:s');
 
         $data['medias'] = $this->medias;
-        $data['user']['id'] = $this->user->id;
-        $data['user']['display_name'] = $this->user->profile->display_name;
-        $data['user']['profile_photo'] = $this->user->profile->profile_photo;
+        $data['user']['profile']['id'] = $this->user->id;
+        $data['user']['profile']['display_name'] = $this->user->profile->display_name;
+        $data['user']['profile']['profile_photo'] = $this->user->profile->profile_photo;
 
         return $data;
     }
