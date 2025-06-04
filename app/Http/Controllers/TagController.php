@@ -9,14 +9,15 @@ class TagController extends Controller
 {
     public function index()
     {
-        $tags = Tag::select('tag')
-            ->selectRaw('count(tag) as count')
-            ->groupBy('tag')
-            ->orderBy('count', 'desc')
+        
+        $tags = Tag::withCount('posts')
+            ->orderBy('posts_count', 'desc')
             ->limit(10)
             ->get();
 
-        return response()->json($tags);
+        return response()->json([
+            "data" => $tags,
+        ], 200);
     }
 
     
