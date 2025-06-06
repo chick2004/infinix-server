@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/change-password', [AuthController::class, 'change_password']);
     
     Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/users', [AuthController::class, 'list']);
 
     Route::get('/posts', [PostController::class, 'index']);
     Route::get('/posts/{id}', [PostController::class, 'show']);

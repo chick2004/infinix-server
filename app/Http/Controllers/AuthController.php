@@ -26,6 +26,16 @@ class AuthController extends Controller
         ], 200);
     }
 
+    public function list(Request $request)
+    {
+        $users = User::where("id", "!=", $request->user()->id)->get();
+
+        return response()->json([
+            "message" => "Users list",
+            "data" => UserResource::collection($users)
+        ], 200);
+    }
+
     public function login(Request $request)
     {
 
@@ -59,7 +69,8 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             "email" => "required|email",
-            "password" => "required"
+            "password" => "required",
+            "code" => "required",
         ]);
 
         if ($validator->fails()) {
@@ -67,6 +78,16 @@ class AuthController extends Controller
                 "message" => "Invalid request data"
             ], 400);
         }
+
+        $verification_code = VerificationCode::where("email", $request->email)->where("code", $request->code);
+        
+        if (!$verification_code->exists()) {
+            return response()->json([
+                "message" => "Invalid code"
+            ], 400);
+        }
+
+        $verification_code->delete();
 
         $user = User::create([
             "email" => $request->email,
@@ -137,8 +158,6 @@ class AuthController extends Controller
                 "message" => "Invalid code"
             ], 400);
         }
-
-        $verification_code->delete();
 
         return response()->json([
             "message" => "Code verified"
