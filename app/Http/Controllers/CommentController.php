@@ -23,6 +23,7 @@ class CommentController extends Controller
 
     public function store(Request $request)
     {
+        info("request: " . json_encode($request->all()));
         $validator = Validator::make($request->all(), [
             'content' => 'required|string',
             'post_id' => 'required|exists:posts,id',
@@ -53,7 +54,10 @@ class CommentController extends Controller
             }
         }
 
-        return new CommentResource($comment);
+        return response()->json([
+            'message' => 'Comment created successfully',
+            'comment' => new CommentResource($comment)
+        ], 200);
     }
 
     public function update(Request $request, $id)

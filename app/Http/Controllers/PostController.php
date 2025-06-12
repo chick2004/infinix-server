@@ -28,8 +28,6 @@ class PostController extends Controller
     public function store(Request $request)
     {
 
-        Log::info(json_encode($request->all()));
-
         $validator = Validator::make($request->all(), [
             'content' => 'nullable|string',
             'visibility' => 'nullable|in:public,private,friends',
@@ -81,10 +79,11 @@ class PostController extends Controller
 
     public function update(Request $request, $id)
     {
+
         $post = Post::withTrashed()->findOrFail($id);
         $post->update($request->only(['content', 'visibility', 'is_shared', 'shared_post_id']));
 
-        $post->tags()->delete();
+        $post->tags()->detach();
 
         preg_match_all('/#\w+/', $request->input('content'), $matches);
         $tag_list = $matches[0];
@@ -95,8 +94,6 @@ class PostController extends Controller
 
         if ($request->has('medias')) {
 
-            $post->medias()->delete();
-
             $medias = $request->file('medias');
             foreach ($medias as $media) {
                 $media_name = time() . '_' . $media->getClientOriginalName();
@@ -106,11 +103,29 @@ class PostController extends Controller
                     'path' => Storage::url($media_path),
                     'type' => $media->getMimeType(),
                 ]);
-
             }
         }
 
-        return new PostResource($post);
+        if ($request->has('deleted_medias')) {
+            $deleted_medias = $request->input('deleted_medias');
+            foreach ($deleted_medias as $media_id) {
+                $media = $post->medias()->find($media_id);
+                if ($media) {
+                    if ($media->path) {
+                        $mediaPath = str_replace('/storage/', '', $media->path);
+                        info('Deleting media file', [
+                            'media_path' => $mediaPath
+                        ]);
+                        Storage::disk('public')->delete($mediaPath);
+                    }
+                    $media->delete();
+                }
+            }
+        }
+
+        return response()->json([
+            'message' => 'Post updated successfully'
+        ], 200);
     }
 
     public function force_destroy($id)

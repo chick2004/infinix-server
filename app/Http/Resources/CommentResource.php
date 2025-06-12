@@ -18,8 +18,8 @@ class CommentResource extends JsonResource
         $data['content'] = $this->content;
 
         $data['user']['id'] = $this->user->id;
-        $data['user']['display_name'] = $this->user->profile->display_name;
-        $data['user']['profile_photo'] = $this->user->profile->profile_photo;
+        $data['user']['profile']['display_name'] = $this->user->profile->display_name;
+        $data['user']['profile']['profile_photo'] = $this->user->profile->profile_photo;
 
         $data['post_id'] = $this->post_id;
         
