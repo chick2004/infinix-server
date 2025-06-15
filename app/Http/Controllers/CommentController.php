@@ -41,17 +41,15 @@ class CommentController extends Controller
 
         $comment = Comment::create($comment_data);
 
-        if ($request->hasFile('medias')) {
-            $medias = $request->file('medias');
-            foreach ($medias as $media) {
-                $media_name = time() . '_' . $media->getClientOriginalName();
-                $media_path = $media->storeAs('uploads', $media_name, 'public');
-                $comment->medias()->create([
-                    'post_id' => $comment->id,
-                    'path' => Storage::url($media_path),
-                    'type' => $media->getMimeType(),
-                ]);
-            }
+        if ($request->hasFile('media')) {
+            $media = $request->file('media');
+            $media_name = time() . '_' . $media->getClientOriginalName();
+            $media_path = $media->storeAs('uploads', $media_name, 'public');
+            $comment->medias()->create([
+                'post_id' => $comment->id,
+                'path' => Storage::url($media_path),
+                'type' => $media->getMimeType(),
+            ]);
         }
 
         return response()->json([
@@ -69,20 +67,16 @@ class CommentController extends Controller
             $comment->content = $request->input('content');
         }
 
-        if ($request->hasFile('medias')) {
+        if ($request->hasFile('media')) {
 
-            $comment->medias()->delete();
-
-            $medias = $request->file('medias');
-            foreach ($medias as $media) {
-                $media_name = time() . '_' . $media->getClientOriginalName();
-                $media_path = $media->storeAs('uploads', $media_name, 'public');
-                $comment->medias()->create([
-                    'post_id' => $comment->id,
-                    'path' => $media_path,
-                    'type' => $media->getMimeType(),
-                ]);
-            }
+            $media = $request->file('media');
+            $media_name = time() . '_' . $media->getClientOriginalName();
+            $media_path = $media->storeAs('uploads', $media_name, 'public');
+            $comment->medias()->create([
+                'post_id' => $comment->id,
+                'path' => $media_path,
+                'type' => $media->getMimeType(),
+            ]);
         }
 
 

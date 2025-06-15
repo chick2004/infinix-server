@@ -30,8 +30,8 @@ class Comment extends Model
         return $this->belongsTo(Comment::class, 'reply_to_comment_id');
     }
 
-    public function medias()
+    public function media()
     {
-        return $this->hasMany(CommentMedia::class);
+        return $this->hasOne(CommentMedia::class);
     }
 }

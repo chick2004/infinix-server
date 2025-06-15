@@ -16,6 +16,7 @@ class CommentResource extends JsonResource
     {
         $data['id'] = $this->id;
         $data['content'] = $this->content;
+        $data['media'] = $this->media;
 
         $data['user']['id'] = $this->user->id;
         $data['user']['profile']['display_name'] = $this->user->profile->display_name;
