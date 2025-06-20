@@ -113,9 +113,6 @@ class PostController extends Controller
                 if ($media) {
                     if ($media->path) {
                         $mediaPath = str_replace('/storage/', '', $media->path);
-                        info('Deleting media file', [
-                            'media_path' => $mediaPath
-                        ]);
                         Storage::disk('public')->delete($mediaPath);
                     }
                     $media->delete();

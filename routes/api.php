@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/users', [AuthController::class, 'list']);
+    Route::get('/users/{id}', [AuthController::class, 'show']);
 
     Route::get('/posts', [PostController::class, 'index']);
     Route::get('/posts/{id}', [PostController::class, 'show']);
@@ -47,17 +48,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/posts/{id}', [PostController::class, 'destroy']);
     Route::delete('/posts/{id}/force', [PostController::class, 'force_destroy']);
     Route::post('/posts/{id}/restore', [PostController::class, 'restore']);
-    
-    Route::get('/tags', [TagController::class, 'index']);
-    Route::get('/tags/{tag}/posts', [PostController::class, 'by_tag']);
-
-    Route::post('/users/{id}/posts', [PostController::class, 'by_user']);
-
+    Route::get('/users/{id}/posts', [PostController::class, 'by_user']);
     Route::post('/posts/{id}/comments', [CommentController::class, 'store']);
     Route::get('/posts/{id}/comments', [CommentController::class, 'by_post']);
     Route::get('/comments/{id}', [CommentController::class, 'show']);
     Route::put('/comments/{id}', [CommentController::class, 'update']);
     Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
+    
+    Route::get('/tags', [TagController::class, 'index']);
+    Route::get('/tags/{tag}/posts', [PostController::class, 'by_tag']);
+
 
     Route::post('/friend-requests', [FriendRequestController::class, 'store']);
     Route::get('/friend-requests/{id}', [FriendRequestController::class, 'show']);
@@ -65,15 +65,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/friend-requests/{id}', [FriendRequestController::class, 'destroy']);
     Route::get('users/{id}/friend-requests', [FriendRequestController::class, 'by_user']);
 
-    Route::post('conversation', [ConversationController::class, 'store']);
-    Route::get('conversation/{id}', [ConversationController::class, 'show']);
-    Route::put('conversation/{id}', [ConversationController::class, 'update']);
-    Route::delete('conversation/{id}', [ConversationController::class, 'destroy']);
+    Route::get('conversations/with_user/{id}', [ConversationController::class,'with_user']);
+    Route::post('conversations', [ConversationController::class, 'store']);
+    Route::get('conversations/{id}', [ConversationController::class, 'show']);
+    Route::put('conversations/{id}', [ConversationController::class, 'update']);
+    Route::delete('conversations/{id}', [ConversationController::class, 'destroy']);
     Route::get('users/{id}/conversations', [ConversationController::class, 'by_user']);
-    Route::get('conversation/{id}/users', [ConversationController::class, 'users']);
+    Route::get('conversations/{id}/users', [ConversationController::class, 'users']);
 
-    Route::post('conversation/{id}/messages', [MessageController::class, 'store']);
-    Route::get('conversation/{id}/messages', [MessageController::class, 'by_conversation']);
+    Route::post('conversations/{id}/messages', [MessageController::class, 'store']);
+    Route::get('conversations/{id}/messages', [MessageController::class, 'by_conversation']);
     Route::get('messages/{id}', [MessageController::class, 'show']);
     Route::put('messages/{id}', [MessageController::class, 'update']);
     Route::delete('messages/{id}', [MessageController::class, 'destroy']);

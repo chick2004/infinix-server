@@ -42,10 +42,10 @@ class CommentController extends Controller
         $comment = Comment::create($comment_data);
 
         if ($request->hasFile('media')) {
-            $media = $request->file('media');
+            $media = $request->file('media')[0];
             $media_name = time() . '_' . $media->getClientOriginalName();
             $media_path = $media->storeAs('uploads', $media_name, 'public');
-            $comment->medias()->create([
+            $comment->media()->create([
                 'post_id' => $comment->id,
                 'path' => Storage::url($media_path),
                 'type' => $media->getMimeType(),
@@ -68,15 +68,21 @@ class CommentController extends Controller
         }
 
         if ($request->hasFile('media')) {
-
-            $media = $request->file('media');
+            Storage::disk('public')->delete(str_replace('/storage/', '', $comment->media()->first()?->path));
+            $comment->media()->delete();
+            $media = $request->file('media')[0];
             $media_name = time() . '_' . $media->getClientOriginalName();
             $media_path = $media->storeAs('uploads', $media_name, 'public');
-            $comment->medias()->create([
+            $comment->media()->create([
                 'post_id' => $comment->id,
-                'path' => $media_path,
+                'path' => Storage::url($media_path),
                 'type' => $media->getMimeType(),
             ]);
+        }
+
+        if ($request->remove_media) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $comment->media()->first()?->path));
+            $comment->media()->delete();
         }
 
 

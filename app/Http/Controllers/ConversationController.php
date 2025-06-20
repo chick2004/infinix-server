@@ -110,7 +110,7 @@ class ConversationController extends Controller
         $conversations = Conversation::whereHas('users', function ($query) use ($id) {
             $query->where('user_id', $id);
         })->get();
-
+        
         return ConversationResource::collection($conversations);
     }
 
@@ -118,5 +118,22 @@ class ConversationController extends Controller
     {
         $conversation = Conversation::findOrFail($id);
         return UserResource::collection($conversation->users);
+    }
+
+    public function with_user(Request $request, $id)
+    {
+        $conversation = Conversation::where('is_group', false)
+            ->whereHas('users', function ($query) use ($id) {
+                $query->where('user_id', $id);
+            })
+            ->whereHas('users', function ($query) use ($request) {
+                $query->where('user_id', $request->user()->id);
+            })
+            ->first();
+
+        if (!$conversation) {
+            return response()->json(['message' => 'Conversation not found'], 404);
+        }
+        return new ConversationResource($conversation);
     }
 }

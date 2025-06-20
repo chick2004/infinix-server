@@ -202,4 +202,14 @@ class AuthController extends Controller
         ], 200);
     }
 
+    public function show(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        return response()->json([
+            "message" => "User data",
+            "data" => new UserResource($user)
+        ], 200);
+    }
+
 }

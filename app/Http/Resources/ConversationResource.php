@@ -14,10 +14,13 @@ class ConversationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $users = $this->users;
+        $the_other = $users->where('id', '!=', $request->user()->id)->first();
+
         $data['id'] = $this->id;
         $data['is_group'] = $this->is_group;
-        $data['name'] = $this->name;
-        $data['image'] = $this->image;
+        $data['name'] = $this->name ?? ($the_other ? $the_other->profile->display_name : null);
+        $data['image'] = $this->image ?? ($the_other ? $the_other->profile->profile_photo : null);
 
         return $data;
     }
