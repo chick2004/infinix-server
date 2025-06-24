@@ -21,9 +21,10 @@ class AuthController extends Controller
     public function user(Request $request) 
     {
         return response()->json([
-            "message" => "User data",
-            "data" => new UserResource($request->user())
-        ], 200);
+            "message" => "",
+            "data" => new UserResource($request->user()),
+            "status" => 200,
+        ]);
     }
 
     public function list(Request $request)
@@ -31,9 +32,10 @@ class AuthController extends Controller
         $users = User::where("id", "!=", $request->user()->id)->get();
 
         return response()->json([
-            "message" => "Users list",
-            "data" => UserResource::collection($users)
-        ], 200);
+            "message" => "",
+            "data" => UserResource::collection($users),
+            "status" => 200,
+        ]);
     }
 
     public function login(Request $request)
@@ -46,14 +48,20 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                "message" => "Invalid request data"
-            ], 400);
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
         }
 
         if (!Auth::attempt($request->only("email", "password")) || User::where("email", $request->email)->doesntExist()) {
             return response()->json([
-                "message" => "Invalid login details"
-            ], 401);
+                "message" => "Invalid login details",
+                "errors" => [
+                    "email" => "The provided credentials do not match our records.",
+                ],
+                "status" => 401,
+            ]);
         }
 
         $request->session()->regenerate();
@@ -75,16 +83,22 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                "message" => "Invalid request data"
-            ], 400);
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
         }
 
         $verification_code = VerificationCode::where("email", $request->email)->where("code", $request->code);
         
         if (!$verification_code->exists()) {
             return response()->json([
-                "message" => "Invalid code"
-            ], 400);
+                "message" => "Invalid code",
+                "errors" => [
+                    "code" => "The provided verification code is invalid.",
+                ],
+                "status" => 422,
+            ]);
         }
 
         $verification_code->delete();
@@ -107,8 +121,9 @@ class AuthController extends Controller
 
         return response()->json([
             "message" => "register successful",
-            "data" => new UserResource($request->user())
-        ], 200);
+            "data" => new UserResource($request->user()),
+            "status" => 201,
+        ]);
     }
 
     public function logout(Request $request)
@@ -119,8 +134,9 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return response()->json([
-            "message" => "Logged out"
-        ], 200);
+            "message" => "Logged out successfully",
+            "status" => 200,
+        ]);
     }
 
     public function send_verification_code(Request $request)
@@ -131,8 +147,12 @@ class AuthController extends Controller
 
         if (User::where("email", $request->email)->exists()) {
             return response()->json([
-                "message" => "Email already exists"
-            ], 400);
+                "message" => "Email already exists",
+                "errors" => [
+                    "email" => "The provided email is already registered.",
+                ],
+                "status" => 422,
+            ]);
         }
 
         $code = VerificationCode::generate($request->email);
@@ -155,13 +175,18 @@ class AuthController extends Controller
         
         if (!$verification_code->exists()) {
             return response()->json([
-                "message" => "Invalid code"
-            ], 400);
+                "message" => "Invalid code",
+                "errors" => [
+                    "code" => "The provided verification code is invalid.",
+                ],
+                "status" => 422,
+            ]);
         }
 
         return response()->json([
-            "message" => "Code verified"
-        ], 200);
+            "message" => "Code verified",
+            "status" => 200,
+        ]);
     }
 
     public function reset_password(Request $request)
@@ -176,8 +201,9 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json([
-            "message" => "Password reset"
-        ], 200);
+            "message" => "Password reset successfully",
+            "status" => 200,
+        ]);
     }
 
     public function change_password(Request $request)
@@ -189,8 +215,12 @@ class AuthController extends Controller
 
         if (!Hash::check($request->current_password, $request->user()->password)) {
             return response()->json([
-                "message" => "Invalid current password"
-            ], 400);
+                "message" => "Invalid current password",
+                "errors" => [
+                    "current_password" => "The provided current password is incorrect.",
+                ],
+                "status" => 422,
+            ]);
         }
 
         $user = $request->user();
@@ -198,8 +228,9 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json([
-            "message" => "Password changed"
-        ], 200);
+            "message" => "Password changed successfully",
+            "status" => 200,
+        ]);
     }
 
     public function show(Request $request, $id)
@@ -207,9 +238,10 @@ class AuthController extends Controller
         $user = User::findOrFail($id);
 
         return response()->json([
-            "message" => "User data",
-            "data" => new UserResource($user)
-        ], 200);
+            "message" => "",
+            "data" => new UserResource($user),
+            "status" => 200,
+        ]);
     }
 
 }

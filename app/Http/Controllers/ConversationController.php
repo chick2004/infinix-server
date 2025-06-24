@@ -17,61 +17,82 @@ class ConversationController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->has('is_group') && $request->input('is_group') == true) {
+        if ($request->has("is_group") && $request->input("is_group") == true) {
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string',
-                'image' => 'required|image',
-                'users' => 'array',
-                'users.*' => 'exists:users,id',
+                "name" => "required|string",
+                "image" => "required|image",
+                "users" => "array",
+                "users.*" => "exists:users,id",
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 400);
+                return response()->json([
+                    "message" => "Invalid request data",
+                    "errors" => $validator->errors(),
+                    "status" => 422,
+                ]);
             }
 
-            $conversation_data = $request->only(['is_group', 'name', 'image']);
+            $conversation_data = $request->only(["is_group", "name", "image"]);
             $conversation = Conversation::create($conversation_data);
 
-            $conversation->users()->attach($request->input('users'));
-            return new ConversationResource($conversation);
+            $conversation->users()->attach($request->input("users"));
+            return response()->json([
+                "message" => "Group conversation created successfully",
+                "data" => new ConversationResource($conversation),
+                "status" => 201,
+            ]);
         } else {
             $validator = Validator::make($request->all(), [
-                'with_user' => 'required|exists:users,id',
+                "with_user" => "required|exists:users,id",
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 400);
+                return response()->json([
+                    "message" => "Invalid request data",
+                    "errors" => $validator->errors(),
+                    "status"=> 422,
+                ]);
             }
 
-            $conversation = Conversation::where('is_group', false)
-                ->whereHas('users', function ($query) use ($request) {
-                    $query->where('user_id', $request->user()->id);
+            $conversation = Conversation::where("is_group", false)
+                ->whereHas("users", function ($query) use ($request) {
+                    $query->where("user_id", $request->user()->id);
                 })
-                ->whereHas('users', function ($query) use ($request) {
-                    $query->where('user_id', $request->input('with_user'));
+                ->whereHas("users", function ($query) use ($request) {
+                    $query->where("user_id", $request->input("with_user"));
                 })
                 ->first();
 
             if ($conversation) {
                 return response()->json([
-                    'errors' => 'Conversation already exists'
-                ], 400);
+                    "message" => "Conversation already exists",
+                    "status" => 409,
+                ]);
             }
 
             $conversation = Conversation::create([
-                'is_group' => false,
+                "is_group" => false,
             ]);
 
-            $conversation->users()->attach([$request->user()->id, $request->input('with_user')]);
+            $conversation->users()->attach([$request->user()->id, $request->input("with_user")]);
 
-            return new ConversationResource($conversation);
+            return response()->json([
+                "message" => "Conversation created successfully",
+                "data" => new ConversationResource($conversation),
+                "status" => 201,
+            ]);
         }
     }
 
     public function show($id)
     {
         $conversation = Conversation::findOrFail($id);
-        return new ConversationResource($conversation);
+        return response()->json([
+            "message" => "",
+            "data" => new ConversationResource($conversation),
+            "status" => 200,
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -79,61 +100,87 @@ class ConversationController extends Controller
         $conversation = Conversation::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'name' => 'string',
-            'image' => 'image',
-            'users' => 'array',
-            'users.*' => 'exists:users,id',
+            "name" => "string",
+            "image" => "image",
+            "users" => "array",
+            "users.*" => "exists:users,id",
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                "message"=> "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
         }
 
-        $conversation->update($request->only(['name', 'image']));
+        $conversation->update($request->only(["name", "image"]));
 
-        if ($request->has('users')) {
-            $conversation->users()->sync($request->input('users'));
+        if ($request->has("users")) {
+            $conversation->users()->sync($request->input("users"));
         }
 
-        return new ConversationResource($conversation);
+        return response()->json([
+            "message" => "Conversation updated successfully",
+            "data" => new ConversationResource($conversation),
+            "status" => 200,
+        ]);
     }
 
     public function destroy($id)
     {
         $conversation = Conversation::findOrFail($id);
         $conversation->delete();
-        return response()->json(null, 204);
+        return response()->json([
+            "message"=> "Conversation deleted successfully",
+            "status" => 200,
+        ]);
     }
 
     public function by_user(Request $request, $id)
     {
-        $conversations = Conversation::whereHas('users', function ($query) use ($id) {
-            $query->where('user_id', $id);
+        $conversations = Conversation::whereHas("users", function ($query) use ($id) {
+            $query->where("user_id", $id);
         })->get();
         
-        return ConversationResource::collection($conversations);
+        return response()->json([
+            "message" => "",
+            "data" => ConversationResource::collection($conversations),
+            "status" => 200,
+        ]);
     }
 
     public function users($id)
     {
         $conversation = Conversation::findOrFail($id);
-        return UserResource::collection($conversation->users);
+        return response()->json([
+            "message" => "",
+            "data" => UserResource::collection($conversation->users),
+            "status" => 200,
+        ]);
     }
 
     public function with_user(Request $request, $id)
     {
-        $conversation = Conversation::where('is_group', false)
-            ->whereHas('users', function ($query) use ($id) {
-                $query->where('user_id', $id);
+        $conversation = Conversation::where("is_group", false)
+            ->whereHas("users", function ($query) use ($id) {
+                $query->where("user_id", $id);
             })
-            ->whereHas('users', function ($query) use ($request) {
-                $query->where('user_id', $request->user()->id);
+            ->whereHas("users", function ($query) use ($request) {
+                $query->where("user_id", $request->user()->id);
             })
             ->first();
 
         if (!$conversation) {
-            return response()->json(['message' => 'Conversation not found'], 404);
+            return response()->json([
+                "message" => "Conversation not found",
+                "status" => 404,
+            ]);
         }
-        return new ConversationResource($conversation);
+        return response()->json([
+            "message" => "",
+            "data" => new ConversationResource($conversation),
+            "status" => 200,
+        ]);
     }
 }

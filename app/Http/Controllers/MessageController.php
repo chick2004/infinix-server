@@ -17,72 +17,102 @@ class MessageController extends Controller
     public function store(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'message' => 'required|string'
+            "content" => "nullable|string",
+            "reply_to_message_id" => "nullable"
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                "content" => "Invalid request data",
+                "errors" => $validator->errors()
+            ]);
         }
 
-        $message_data = $request->only(['message']);
-        $message_data['conversation_id'] = $id;
-        $message_data['user_id'] = $request->user()->id;
+        info("request data", $request->all());
+
+        $message_data = $request->only(["content", "reply_to_message_id"]);
+        $message_data["conversation_id"] = $id;
+        $message_data["user_id"] = $request->user()->id;
 
         $message = Message::create($message_data);
         
-        if ($request->hasFile('medias')) {
-            $medias = $request->file('medias');
+        if ($request->hasFile("medias")) {
+            $medias = $request->file("medias");
             foreach ($medias as $media) {
-                $media_name = time() . '_' . $media->getClientOriginalName();
-                $media_path = $media->storeAs('uploads', $media_name, 'public');
+                $media_name = time() . "_" . $media->getClientOriginalName();
+                $media_path = $media->storeAs("uploads", $media_name, "public");
                 $message->medias()->create([
-                    'message_id' => $message->id,
-                    'path' => Storage::url($media_path),
-                    'type' => $media->getMimeType(),
+                    "message_id" => $message->id,
+                    "path" => Storage::url($media_path),
+                    "type" => $media->getMimeType(),
                 ]);
             }
         }
 
-        return new MessageResource($message);
+        return response()->json([
+            "message" => "Message sent successfully",
+            "data" => new MessageResource($message),
+            "status" => 201,
+        ]);
     }
 
     public function show($id)
     {
         $message = Message::findOrfail($id);
-        return new MessageResource($message);
+        return response()->json([
+            "data" => new MessageResource($message),
+            "status" => 200,
+        ]);
     }
 
     public function update(Request $request, $id)
     {
         $message = Message::findOrfail($id);
         $message->update($request->all());
-        return new MessageResource($message);
+        return response()->json([
+            "message" => "Message updated successfully",
+            "data" => new MessageResource($message),
+            "status" => 200,
+        ]);
     }
 
     public function destroy($id)
     {
         $message = Message::findOrfail($id);
         $message->softDelete();
-        return response()->json(null, 204);
+        return response()->json([
+            "message" => "Message deleted successfully",
+            "status" => 200,
+        ]);
     }
 
     public function restore($id)
     {
         $message = Message::withTrashed()->findOrfail($id);
         $message->restore();
-        return new MessageResource($message);
+        return response()->json([
+            "message" => "Message restored successfully",
+            "data" => new MessageResource($message),
+            "status"=> 200
+        ]);
     }
 
     public function force_delete($id)
     {
         $message = Message::withTrashed()->findOrfail($id);
         $message->forceDelete();
-        return response()->json(null, 204);
+        return response()->json([
+            "message" => "Message permanently deleted successfully",
+            "status" => 200,
+        ]);
     }
     
     public function by_conversation($id)
     {
-        $messages = Message::where('conversation_id', $id)->get();
-        return MessageResource::collection($messages);
+        $messages = Message::where("conversation_id", $id)->get();
+        return response()->json([
+            "data" => MessageResource::collection($messages),
+            "status" => 200,
+        ]);
     }
 }

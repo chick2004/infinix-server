@@ -17,7 +17,8 @@ class TagController extends Controller
 
         return response()->json([
             "data" => $tags,
-        ], 200);
+            "status" => 200,
+        ]);
     }
 
     
