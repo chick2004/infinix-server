@@ -40,7 +40,6 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             "email" => "required|email",
             "password" => "required",
@@ -68,8 +67,9 @@ class AuthController extends Controller
 
         return response()->json([
             "message" => "login successful",
-            "data" => new UserResource($request->user())
-        ], 200);
+            "data" => new UserResource($request->user()),
+            "status"=> 200,
+        ]);
 
     }
 

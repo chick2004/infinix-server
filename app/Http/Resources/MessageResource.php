@@ -21,8 +21,12 @@ class MessageResource extends JsonResource
         $data['user']['profile']['display_name'] = $this->user->profile->display_name;
         $data['user']['profile']['profile_photo'] = $this->user->profile->profile_photo;
         $data['user']['profile']['cover_photo'] = $this->user->profile->cover_photo;
+        $data['reply_to'] = new self($this->replyToMessage);
         $data['content'] = $this->content;
         $data['medias'] = $this->medias;
+        $data['is_edited'] = $this->is_edited;
+        $data['is_deleted'] = $this->is_deleted;
+        $data['is_recalled'] = $this->is_recalled;
         $data['created_at'] = $this->created_at;
         $data['updated_at'] = $this->updated_at;
 

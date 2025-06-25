@@ -18,6 +18,12 @@ class Message extends Model
         'content',
     ];
 
+    protected $casts = [
+        'is_edited' => 'boolean',
+        'is_deleted' => 'boolean',
+        'is_recalled' => 'boolean',
+    ];
+
     public function conversation()
     {
         return $this->belongsTo(Conversation::class);

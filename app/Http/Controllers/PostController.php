@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\PostResource;
+use App\Models\PostBookmark;
 use Illuminate\Http\Request;
 use App\Models\Post;
 use Illuminate\Support\Facades\Validator;
@@ -188,5 +189,45 @@ class PostController extends Controller
             "data" => PostResource::collection($posts),
             "status" => 200,
         ]);
+    }
+
+    public function bookmark(Request $request, $id)
+    {
+        $post = Post::withTrashed()->findOrFail($id);
+        $user = $request->user();
+
+        if ($user->bookmarks()->where('post_id', $post->id)->exists()) {
+            $user->bookmarks()->where('post_id', $post->id)->delete();
+            return response()->json([
+                "message" => "Bookmark removed",
+                "status" => 200,
+            ]);
+        } else {
+            $user->bookmarks()->create(['post_id' => $post->id]);
+            return response()->json([
+                "message" => "Bookmark added",
+                "status" => 201,
+            ]);
+        }
+    }
+
+    public function like(Request $request, $id)
+    {
+        $post = Post::withTrashed()->findOrFail($id);
+        $user = $request->user();
+
+        if ($post->likes()->where('user_id', $user->id)->exists()) {
+            $post->likes()->where('user_id', $user->id)->delete();
+            return response()->json([
+                "message" => "Like removed",
+                "status" => 200,
+            ]);
+        } else {
+            $post->likes()->create(['user_id' => $user->id]);
+            return response()->json([
+                "message" => "Post liked",
+                "status" => 201,
+            ]);
+        }
     }
 }

@@ -39,7 +39,12 @@ class User extends Authenticatable
 
     public function posts()
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(Post::class, 'user_id');
+    }
+
+    public function bookmarks()
+    {
+        return $this->hasMany(PostBookmark::class, 'user_id');
     }
 
     public function friend_requests_sent()

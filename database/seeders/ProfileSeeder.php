@@ -17,15 +17,16 @@ class ProfileSeeder extends Seeder
         $users = User::all();
 
         foreach ($users as $user) {
-            Profile::firstOrCreate(
-            ['user_id' => $user->id],
-            [
-                'display_name' => 'display_name_' . $user->id,
+            Profile::create([
+                'user_id' => $user->id,
+                'display_name' => fake()->name(),
                 'profile_photo' => null,
                 'cover_photo' => null,
-                'bio' => null,
-                'date_of_birth' => null,
-                'gender' => 'other',
+                'bio' => fake()->sentence(),
+                'date_of_birth' => fake()->date(),
+                'gender' => ['male', 'female', 'other'][rand(0, 2)],
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
             );
         }

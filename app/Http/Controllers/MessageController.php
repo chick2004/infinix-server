@@ -69,6 +69,8 @@ class MessageController extends Controller
     {
         $message = Message::findOrfail($id);
         $message->update($request->all());
+        $message->is_edited = true;
+        $message->save();
         return response()->json([
             "message" => "Message updated successfully",
             "data" => new MessageResource($message),

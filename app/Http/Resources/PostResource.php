@@ -21,8 +21,12 @@ class PostResource extends JsonResource
         $data['created_at'] = $this->created_at->format('Y-m-d H:i:s');
         $data['updated_at'] = $this->updated_at->format('Y-m-d H:i:s');
         $data['deleted_at'] = $this->deleted_at?->format('Y-m-d H:i:s');
-
-        $data['medias'] = $this->medias;
+        $data['like_count'] = $this->like_count;
+        $data['is_liked'] = $request->user() ? $this->likes->contains('user_id', $request->user()->id) : false;
+        $data['comment_count'] = $this->comment_count ?? 0;
+        $data['share_count'] = $this->share_count ?? 0;
+        $data['is_bookmarked'] = $request->user() ? $request->user()->bookmarks->contains('post_id', $this->id) : false;
+        $data['medias'] = $this->medias ?? 0;
         $data['user']['profile']['id'] = $this->user->id;
         $data['user']['profile']['display_name'] = $this->user->profile->display_name;
         $data['user']['profile']['profile_photo'] = $this->user->profile->profile_photo;

@@ -7,6 +7,12 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Database\Seeders\UserSeeder;
 use Database\Seeders\ProfileSeeder;
+use Database\Seeders\PostSeeder;
+use Database\Seeders\PostTagSeeder;
+use Database\Seeders\CommentSeeder;
+use Database\Seeders\ConversationSeeder;
+use Database\Seeders\ConversationUserSeeder;
+use Database\Seeders\MessageSeeder;
 
 
 class DatabaseSeeder extends Seeder
@@ -18,7 +24,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
-            ProfileSeeder::class
+            ProfileSeeder::class,
+            PostSeeder::class,
+            PostTagSeeder::class,
+            CommentSeeder::class,
+            ConversationSeeder::class,
+            ConversationUserSeeder::class,
+            MessageSeeder::class,
         ]);
     }
 }
