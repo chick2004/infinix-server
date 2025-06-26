@@ -36,14 +36,14 @@ class BookmarkController extends Controller
 
         $user = $request->user();
 
-        if ($user->bookmarks()->where('post_id', $request->post->id)->exists()) {
-            $user->bookmarks()->where('post_id', $request->post->id)->delete();
+        if ($user->bookmarks()->where('post_id', $request->post_id)->exists()) {
+            $user->bookmarks()->where('post_id', $request->post_id)->delete();
             return response()->json([
                 "message" => "Bookmark removed",
                 "status" => 200,
             ]);
         } else {
-            $user->bookmarks()->create(['post_id' => $request->post->id]);
+            $user->bookmarks()->create(['post_id' => $request->post_id]);
             return response()->json([
                 "message" => "Bookmark added",
                 "status" => 201,

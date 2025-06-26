@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [AuthController::class, 'list']);
     Route::get('/users/{id}', [AuthController::class, 'show']);
     Route::get('/users/{id}/bookmarks', [BookmarkController::class, 'by_user']);
+    Route::post('/users/{id}/bookmarks', [BookmarkController::class, 'store']);
 
     Route::get('/posts', [PostController::class, 'index']);
     Route::get('/posts/{id}', [PostController::class, 'show']);
@@ -56,7 +57,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/comments/{id}', [CommentController::class, 'show']);
     Route::put('/comments/{id}', [CommentController::class, 'update']);
     Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
-    Route::post('/posts/{id}/bookmark', [PostController::class, 'bookmark']);
     Route::post('/posts/{id}/like', [PostController::class, 'like']);
 
     

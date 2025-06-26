@@ -27,6 +27,7 @@ class PostResource extends JsonResource
         $data['share_count'] = $this->share_count ?? 0;
         $data['is_bookmarked'] = $request->user() ? $request->user()->bookmarks->contains('post_id', $this->id) : false;
         $data['medias'] = $this->medias ?? 0;
+        $data['user']['id'] = $this->user->id;
         $data['user']['profile']['id'] = $this->user->id;
         $data['user']['profile']['display_name'] = $this->user->profile->display_name;
         $data['user']['profile']['profile_photo'] = $this->user->profile->profile_photo;
