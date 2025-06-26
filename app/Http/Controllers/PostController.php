@@ -191,26 +191,6 @@ class PostController extends Controller
         ]);
     }
 
-    public function bookmark(Request $request, $id)
-    {
-        $post = Post::withTrashed()->findOrFail($id);
-        $user = $request->user();
-
-        if ($user->bookmarks()->where('post_id', $post->id)->exists()) {
-            $user->bookmarks()->where('post_id', $post->id)->delete();
-            return response()->json([
-                "message" => "Bookmark removed",
-                "status" => 200,
-            ]);
-        } else {
-            $user->bookmarks()->create(['post_id' => $post->id]);
-            return response()->json([
-                "message" => "Bookmark added",
-                "status" => 201,
-            ]);
-        }
-    }
-
     public function like(Request $request, $id)
     {
         $post = Post::withTrashed()->findOrFail($id);

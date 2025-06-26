@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookmarkController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/users', [AuthController::class, 'list']);
     Route::get('/users/{id}', [AuthController::class, 'show']);
+    Route::get('/users/{id}/bookmarks', [BookmarkController::class, 'by_user']);
 
     Route::get('/posts', [PostController::class, 'index']);
     Route::get('/posts/{id}', [PostController::class, 'show']);
