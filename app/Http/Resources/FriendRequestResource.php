@@ -14,13 +14,15 @@ class FriendRequestResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $data['sender']['id'] = $this->sender->id;
-        $data['sender']['display_name'] = $this->sender->profile->display_name;
-        $data['sender']['profile_photo'] = $this->sender->profile->profile_photo;
+        $data['id'] = $this->id;
 
-        $data['receiver']['id'] = $this->receiver->id;
-        $data['receiver']['display_name'] = $this->receiver->profile->display_name;
-        $data['receiver']['profile_photo'] = $this->receiver->profile->profile_photo;
+        $data['sender']['id'] = $this->sender->id;
+        $data['sender']['profile']['display_name'] = $this->sender->profile->display_name;
+        $data['sender']['profile']['profile_photo'] = $this->sender->profile->profile_photo;
+
+        $data['receiver']['profile']['id'] = $this->receiver->id;
+        $data['receiver']['profile']['display_name'] = $this->receiver->profile->display_name;
+        $data['receiver']['profile']['profile_photo'] = $this->receiver->profile->profile_photo;
 
         $data['created_at'] = $this->created_at;
         $data['updated_at'] = $this->updated_at;

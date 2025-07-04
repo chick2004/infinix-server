@@ -34,9 +34,8 @@ class FriendRequestController extends Controller
 
         $friend_request = FriendRequest::create($friend_request_data);
 
-        return response()->json([
+        return (new FriendRequestResource($friend_request))->additional([
             "message" => "Friend request sent successfully",
-            "data" => new FriendRequestResource($friend_request),
             "status" => 201,
         ]);
     }
@@ -44,9 +43,9 @@ class FriendRequestController extends Controller
     public function show($id)
     {
         $friend_request = FriendRequest::findOrFail($id);
-        return response()->json([
-            "data" => new FriendRequestResource($friend_request),
-            "status" => 200,
+        return (new FriendRequestResource($friend_request))->additional([
+            "message" => "Friend request sent successfully",
+            "status" => 201,
         ]);
     }
 
@@ -70,6 +69,7 @@ class FriendRequestController extends Controller
             $relationship_data = [
                 "user_id" => $friend_request->sender_id,
                 "related_user_id" => $friend_request->receiver_id,
+                "type" => "friend",
             ];
             Relationship::create($relationship_data);
             $friend_request->delete();
@@ -77,10 +77,9 @@ class FriendRequestController extends Controller
             $friend_request->delete();
         }
 
-        return response()->json([
+        return (new FriendRequestResource($friend_request))->additional([
             "message" => "Friend request updated successfully",
-            "data" => new FriendRequestResource($friend_request),
-            "status"=> 200,
+            "status" => 200,
         ]);
     }
 
@@ -97,8 +96,7 @@ class FriendRequestController extends Controller
     public function by_sender(Request $request)
     {
         $friend_requests = FriendRequest::where("sender_id", $request->user()->id)->get();
-        return response()->json([
-            "data" => FriendRequestResource::collection($friend_requests),
+        return FriendRequestResource::collection($friend_requests)->additional([
             "status" => 200,
         ]);
     }
@@ -106,7 +104,9 @@ class FriendRequestController extends Controller
     public function by_receiver(Request $request)
     {
         $friend_requests = FriendRequest::where("receiver_id", $request->user()->id)->get();
-        return FriendRequestResource::collection($friend_requests);
+        return FriendRequestResource::collection($friend_requests)->additional([
+            "status" => 200,
+        ]);
     }
 
     public function by_user(Request $request, $id)
@@ -114,8 +114,7 @@ class FriendRequestController extends Controller
         $friend_requests = FriendRequest::where("sender_id", $id)
             ->orWhere("receiver_id", $id)
             ->get();
-        return response()->json([
-            "data" => FriendRequestResource::collection($friend_requests),
+        return FriendRequestResource::collection($friend_requests)->additional([
             "status" => 200,
         ]);
     }

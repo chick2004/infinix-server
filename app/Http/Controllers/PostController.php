@@ -17,9 +17,9 @@ class PostController extends Controller
     public function index()
     {
         $posts = Post::withTrashed()->orderBy("created_at", "desc")->paginate(20);
-        return response()->json([
-            "data" => PostResource::collection($posts),
+        return PostResource::collection($posts)->additional([
             "status" => 200,
+            "message" => "Posts retrieved successfully",
         ]);
     }
 
@@ -72,7 +72,7 @@ class PostController extends Controller
                 $media_path = $media->storeAs("uploads", $media_name, "public");
                 $post->medias()->create([
                     "post_id" => $post->id,
-                    "path" => Storage::url($media_path),
+                    "path" => url(Storage::url($media_path)),
                     "type" => $media->getMimeType(),
                 ]);
             }
@@ -108,7 +108,7 @@ class PostController extends Controller
                 $media_path = $media->storeAs("uploads", $media_name, "public");
                 $post->medias()->create([
                     "post_id" => $post->id,
-                    "path" => Storage::url($media_path),
+                    "path" => url(Storage::url($media_path)),
                     "type" => $media->getMimeType(),
                 ]);
             }

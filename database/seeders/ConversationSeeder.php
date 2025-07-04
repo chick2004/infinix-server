@@ -13,7 +13,7 @@ class ConversationSeeder extends Seeder
      */
     public function run(): void
     {
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 30; $i++) {
             Conversation::create([
                 'is_group' => rand(0, 1) ? true : false,
                 'name' => fake()->name(),

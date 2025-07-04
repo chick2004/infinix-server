@@ -59,9 +59,17 @@ class User extends Authenticatable
 
     public function friends()
     {
-        return $this->belongsToMany(User::class, 'relationships', 'user_id', 'related_user_id')
-            ->orWhere('relationships.related_user_id', $this->id)
-            ->wherePivot('type', 'friend');
+        return User::whereIn('id', function($query) {
+            $query->select('related_user_id')
+                  ->from('relationships')
+                  ->where('user_id', $this->id)
+                  ->where('type', 'friend');
+        })->orWhereIn('id', function($query) {
+            $query->select('user_id')
+                  ->from('relationships')
+                  ->where('related_user_id', $this->id)
+                  ->where('type', 'friend');
+        });
     }
 
     public function followers()
@@ -70,7 +78,7 @@ class User extends Authenticatable
             ->wherePivot('type', 'follow');
     }
 
-    public function followings()
+    public function following()
     {
         return $this->belongsToMany(User::class, 'relationships', 'user_id', 'related_user_id')
             ->wherePivot('type', 'follow');
@@ -85,6 +93,25 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Conversation::class, 'conversation_users')
             ->wherePivot('is_admin', true);
+    }
+
+    public function getFriendIds()
+    {
+        $friendIds = collect();
+        
+        // Lấy những user mà user hiện tại đã kết bạn (user_id -> related_user_id)
+        $friendIds1 = \DB::table('relationships')
+            ->where('user_id', $this->id)
+            ->where('type', 'friend')
+            ->pluck('related_user_id');
+            
+        // Lấy những user đã kết bạn với user hiện tại (related_user_id -> user_id)
+        $friendIds2 = \DB::table('relationships')
+            ->where('related_user_id', $this->id)
+            ->where('type', 'friend')
+            ->pluck('user_id');
+            
+        return $friendIds1->merge($friendIds2)->unique()->values();
     }
 
 

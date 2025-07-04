@@ -52,7 +52,7 @@ class CommentController extends Controller
             $media_path = $media->storeAs("uploads", $media_name, "public");
             $comment->media()->create([
                 "post_id" => $comment->id,
-                "path" => Storage::url($media_path),
+                "path" => url(Storage::url($media_path)),
                 "type" => $media->getMimeType(),
             ]);
         }
@@ -81,7 +81,7 @@ class CommentController extends Controller
             $media_path = $media->storeAs("uploads", $media_name, "public");
             $comment->media()->create([
                 "post_id" => $comment->id,
-                "path" => Storage::url($media_path),
+                "path" => url(Storage::url($media_path)),
                 "type" => $media->getMimeType(),
             ]);
         }

@@ -6,6 +6,7 @@ use App\Http\Resources\ConversationResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Conversation;
 
 
@@ -17,7 +18,7 @@ class ConversationController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->has("is_group") && $request->input("is_group") == true) {
+        if ($request->has("is_group") && $request->boolean("is_group")) {
             $validator = Validator::make($request->all(), [
                 "name" => "required|string",
                 "image" => "required|image",
@@ -33,10 +34,20 @@ class ConversationController extends Controller
                 ]);
             }
 
-            $conversation_data = $request->only(["is_group", "name", "image"]);
+            $conversation_data = $request->only(["is_group", "name"]);
+            $conversation_data['is_group'] = $request->boolean('is_group');
+
+            if ($request->has("image")) {
+                $media = $request->file("image");
+                $media_name = time() . "_" . $media->getClientOriginalName();
+                $media_path = $media->storeAs("uploads", $media_name, "public");
+                $conversation_data["image"] = url(Storage::url($media_path));
+            }
+
             $conversation = Conversation::create($conversation_data);
 
             $conversation->users()->attach($request->input("users"));
+            $conversation->users()->attach($request->user()->id, ['is_admin' => true]);
             return response()->json([
                 "message" => "Group conversation created successfully",
                 "data" => new ConversationResource($conversation),
@@ -150,6 +161,20 @@ class ConversationController extends Controller
         ]);
     }
 
+    public function groups_by_user(Request $request, $id)
+    {
+        $conversations = Conversation::where("is_group", true)
+            ->whereHas("users", function ($query) use ($id) {
+                $query->where("user_id", $id);
+            })->get();
+
+        return response()->json([
+            "message" => "",
+            "data" => ConversationResource::collection($conversations),
+            "status" => 200,
+        ]);
+    }
+
     public function users($id)
     {
         $conversation = Conversation::findOrFail($id);
@@ -172,10 +197,11 @@ class ConversationController extends Controller
             ->first();
 
         if (!$conversation) {
-            return response()->json([
-                "message" => "Conversation not found",
-                "status" => 404,
+            $conversation = Conversation::create([
+                "is_group" => false,
             ]);
+            $conversation->users()->attach([$request->user()->id, $id]);
+
         }
         return response()->json([
             "message" => "",

@@ -16,9 +16,9 @@ class PostSeeder extends Seeder
     {
         $users = User::all();
 
-        foreach ($users as $user) {
+        for ($i = 0; $i <= 100; $i++) {
             Post::create([
-                "user_id"=> $user->id,
+                "user_id"=> $users->random()->id,
                 "shared_post_id" => null,
                 "content" => fake()->paragraph(),
                 "visibility" => ['public', 'private', 'friends'][rand(0, 2)],
