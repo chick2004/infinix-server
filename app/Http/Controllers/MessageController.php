@@ -49,9 +49,8 @@ class MessageController extends Controller
             }
         }
 
-        return response()->json([
+        return (new MessageResource($message))->additional([
             "message" => "Message sent successfully",
-            "data" => new MessageResource($message),
             "status" => 201,
         ]);
     }
@@ -59,8 +58,8 @@ class MessageController extends Controller
     public function show($id)
     {
         $message = Message::findOrfail($id);
-        return response()->json([
-            "data" => new MessageResource($message),
+        return (new MessageResource($message))->additional([
+            "message" => "Message retrieved successfully",
             "status" => 200,
         ]);
     }
@@ -100,9 +99,8 @@ class MessageController extends Controller
             }
         }
 
-        return response()->json([
+        return (new MessageResource($message))->additional([
             "message" => "Message updated successfully",
-            "data" => new MessageResource($message),
             "status" => 200,
         ]);
     }
@@ -121,10 +119,9 @@ class MessageController extends Controller
     {
         $message = Message::withTrashed()->findOrfail($id);
         $message->restore();
-        return response()->json([
+        return (new MessageResource($message))->additional([
             "message" => "Message restored successfully",
-            "data" => new MessageResource($message),
-            "status"=> 200
+            "status" => 200,
         ]);
     }
 
@@ -140,9 +137,21 @@ class MessageController extends Controller
     
     public function by_conversation($id)
     {
-        $messages = Message::where("conversation_id", $id)->get();
+        $messages = Message::where("conversation_id", $id)->paginate(20);
+        return MessageResource::collection($messages)->additional([
+            "message" => "Messages retrieved successfully",
+            "status" => 200,
+        ]);
+    }
+
+    public function pin_message(Request $request, $id)
+    {
+        $message = Message::findOrfail($id);
+        $message->is_pinned = !$message->is_pinned; 
+        $message->save();
+
         return response()->json([
-            "data" => MessageResource::collection($messages),
+            "message" => "Message toggled pin status successfully",
             "status" => 200,
         ]);
     }

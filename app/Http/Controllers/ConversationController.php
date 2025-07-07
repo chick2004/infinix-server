@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Conversation;
+use App\Models\Message;
+use App\Http\Resources\MessageResource;
 
 
 class ConversationController extends Controller
@@ -206,6 +208,15 @@ class ConversationController extends Controller
         return response()->json([
             "message" => "",
             "data" => new ConversationResource($conversation),
+            "status" => 200,
+        ]);
+    }
+
+    public function pinned_messages($id)
+    {
+        $messages = Conversation::findOrFail($id)->messages()->where("is_pinned", true)->get();
+        return MessageResource::collection($messages)->additional([
+            "message" => "Pinned messages retrieved successfully",
             "status" => 200,
         ]);
     }

@@ -17,7 +17,7 @@ class ConversationSeeder extends Seeder
             Conversation::create([
                 'is_group' => rand(0, 1) ? true : false,
                 'name' => fake()->name(),
-                'image' => null,
+                'image' => 'https://picsum.photos/seed/'.rand(1, 999).'/640/480',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

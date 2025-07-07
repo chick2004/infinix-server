@@ -8,11 +8,14 @@ use Illuminate\Database\Seeder;
 use Database\Seeders\UserSeeder;
 use Database\Seeders\ProfileSeeder;
 use Database\Seeders\PostSeeder;
+use Database\Seeders\PostMediaSeeder;
 use Database\Seeders\PostTagSeeder;
 use Database\Seeders\CommentSeeder;
+use Database\Seeders\CommentMediaSeeder;
 use Database\Seeders\ConversationSeeder;
 use Database\Seeders\ConversationUserSeeder;
 use Database\Seeders\MessageSeeder;
+use Database\Seeders\MessageMediaSeeder;
 
 
 class DatabaseSeeder extends Seeder
@@ -26,11 +29,14 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ProfileSeeder::class,
             PostSeeder::class,
+            PostMediaSeeder::class,
             PostTagSeeder::class,
             CommentSeeder::class,
+            CommentMediaSeeder::class,
             ConversationSeeder::class,
             ConversationUserSeeder::class,
             MessageSeeder::class,
+            MessageMediaSeeder::class,
         ]);
     }
 }

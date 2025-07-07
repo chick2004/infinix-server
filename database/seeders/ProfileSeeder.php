@@ -20,8 +20,8 @@ class ProfileSeeder extends Seeder
             Profile::create([
                 'user_id' => $user->id,
                 'display_name' => fake()->name(),
-                'profile_photo' => null,
-                'cover_photo' => null,
+                'profile_photo' => 'https://picsum.photos/seed/'.rand(1, 999).'/640/480',
+                'cover_photo' => 'https://picsum.photos/seed/'.rand(1, 999).'/1280/720',
                 'bio' => fake()->sentence(),
                 'date_of_birth' => fake()->date(),
                 'gender' => ['male', 'female', 'other'][rand(0, 2)],

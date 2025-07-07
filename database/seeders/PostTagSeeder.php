@@ -14,7 +14,7 @@ class PostTagSeeder extends Seeder
      */
     public function run(): void
     {
-        for($i = 0; $i < 10; $i++) {
+        for($i = 0; $i < 20; $i++) {
             Tag::create([
                 "name" => fake()->unique()->word(),
                 "created_at" => now(),

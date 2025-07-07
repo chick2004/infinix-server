@@ -15,6 +15,7 @@ class Message extends Model
         'is_edited',
         'is_deleted',
         'is_recalled',
+        'is_pinned',
         'content',
     ];
 
@@ -22,6 +23,7 @@ class Message extends Model
         'is_edited' => 'boolean',
         'is_deleted' => 'boolean',
         'is_recalled' => 'boolean',
+        'is_pinned' => 'boolean',
     ];
 
     public function conversation()

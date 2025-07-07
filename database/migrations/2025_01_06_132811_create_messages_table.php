@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('is_edited')->default(false);
             $table->boolean('is_deleted')->default(false);
             $table->boolean('is_recalled')->default(false);
+            $table->boolean('is_pinned')->default(false);
             $table->text('content');
             $table->timestamps();
         });

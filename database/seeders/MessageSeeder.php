@@ -18,7 +18,7 @@ class MessageSeeder extends Seeder
         $conversations = Conversation::all();
 
         foreach ($conversations as $conversation) {
-            for ($i = 0; $i < rand(25, 75); $i++) {
+            for ($i = 0; $i < rand(150, 200); $i++) {
                 Message::create([
                     'user_id' => $conversation->users->random()->id,
                     'conversation_id' => $conversation->id,

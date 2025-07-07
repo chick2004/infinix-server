@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('users/{id}/conversations', [ConversationController::class, 'by_user']);
     Route::get('users/{id}/group-conversations', [ConversationController::class, 'groups_by_user']);
     Route::get('conversations/{id}/users', [ConversationController::class, 'users']);
+    Route::get('conversations/{id}/pinned-messages', [ConversationController::class, 'pinned_messages']);
 
     // Message routes 
     Route::post('conversations/{id}/messages', [MessageController::class, 'store']);
@@ -109,4 +110,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('messages/{id}', [MessageController::class, 'destroy']);
     Route::delete('messages/{id}/force', [MessageController::class, 'force_destroy']);
     Route::post('messages/{id}/restore', [MessageController::class, 'restore']);
+    Route::post('messages/{id}/pin', [MessageController::class, 'pin_message']);
 });

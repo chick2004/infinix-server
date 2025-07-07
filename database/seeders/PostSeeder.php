@@ -16,7 +16,7 @@ class PostSeeder extends Seeder
     {
         $users = User::all();
 
-        for ($i = 0; $i <= 100; $i++) {
+        for ($i = 0; $i <= 200; $i++) {
             Post::create([
                 "user_id"=> $users->random()->id,
                 "shared_post_id" => null,
