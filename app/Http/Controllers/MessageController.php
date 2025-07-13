@@ -137,7 +137,7 @@ class MessageController extends Controller
     
     public function by_conversation($id)
     {
-        $messages = Message::where("conversation_id", $id)->paginate(20);
+        $messages = Message::where("conversation_id", $id)->orderBy("created_at", "desc")->paginate(20);
         return MessageResource::collection($messages)->additional([
             "message" => "Messages retrieved successfully",
             "status" => 200,

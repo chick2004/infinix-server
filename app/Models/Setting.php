@@ -8,7 +8,7 @@ class Setting extends Model
 {
     protected $table = 'settings';
     
-    protected $fillable = ['theme', 'language'];
+    protected $fillable = ['user_id', 'theme', 'language'];
 
     public function user()
     {

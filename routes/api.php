@@ -15,6 +15,7 @@ use App\Http\Controllers\FriendController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\SettingController;
 
 use Illuminate\Support\Facades\Log;
 
@@ -111,4 +112,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('messages/{id}/force', [MessageController::class, 'force_destroy']);
     Route::post('messages/{id}/restore', [MessageController::class, 'restore']);
     Route::post('messages/{id}/pin', [MessageController::class, 'pin_message']);
+
+    // Setting routes
+    Route::get('/users/{id}/settings', [SettingController::class, 'show']);
+    Route::put('/users/{id}/settings', [SettingController::class, 'update']);
 });
