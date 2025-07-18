@@ -95,6 +95,11 @@ class User extends Authenticatable
             ->wherePivot('is_admin', true);
     }
 
+    public function nofitications()
+    {
+        return $this->hasMany(Notification::class, "receiver_id");
+    }
+
     public function getFriendIds()
     {
         $friendIds = collect();

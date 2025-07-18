@@ -206,6 +206,31 @@ class AuthController extends Controller
         ]);
     }
 
+    public function verify_current_password(Request $request)
+    {
+        $request->validate([
+            "current_password" => "required",
+        ]);
+
+        if (!Hash::check($request->current_password, $request->user()->password)) {
+            return response()->json([
+                "message" => "Invalid password",
+                "errors" => [
+                    "current_password" => [
+                        "code" => "INVALID_PASSWORD",
+                        "message" => "The provided password is incorrect.",
+                    ],
+                ],
+                "status" => 422,
+            ]);
+        }
+
+        return response()->json([
+            "message" => "Password verified successfully",
+            "status" => 200,
+        ]);
+    }
+
     public function change_password(Request $request)
     {
         $request->validate([
@@ -217,7 +242,10 @@ class AuthController extends Controller
             return response()->json([
                 "message" => "Invalid current password",
                 "errors" => [
-                    "current_password" => "The provided current password is incorrect.",
+                    "current_password" => [
+                        "code" => "INVALID_PASSWORD",
+                        "message" => "The provided current password is incorrect.",
+                    ],
                 ],
                 "status" => 422,
             ]);

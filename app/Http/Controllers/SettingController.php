@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\Profile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class SettingController extends Controller
 {
@@ -36,19 +37,27 @@ class SettingController extends Controller
         info("request data: " . json_encode($request->all()));
 
         // Validate the request data
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             "display_name" => "string|max:255|nullable",
             "bio" => "string|nullable",
             "date_of_birth" => "nullable",
             "cover_photo" => "nullable|image",
             "profile_photo" => "nullable|image",
-            "username" => "string|max:255|nullable",
+            "username" => "string|max:255|nullable|unique:users|min:8",
             "email" => "email|max:255|nullable",
             "phone_number" => "string|max:15|nullable",
             "password" => "string|min:8|confirmed|nullable",
             "theme" => "string|in:light,dark,system|nullable",
             "language" => "string|in:en,vi|nullable",
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => "Validation failed",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
+        }
 
         $user = User::findOrFail($id);
 
