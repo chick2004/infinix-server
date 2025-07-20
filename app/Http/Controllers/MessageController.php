@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Message;
 use App\Http\Resources\MessageResource;
 use Illuminate\Support\Facades\Storage;
+use App\Services\MessageService;
 
 class MessageController extends Controller
 {
@@ -19,6 +20,9 @@ class MessageController extends Controller
         $validator = Validator::make($request->all(), [
             "content" => "nullable|string",
             "reply_to_message_id" => "nullable"
+        ], [
+            "content.required" => "ERR_REQUIRED",
+            "reply_to_message_id.exists" => "ERR_MESSAGE_NOT_FOUND",
         ]);
 
         if ($validator->fails()) {
@@ -28,29 +32,16 @@ class MessageController extends Controller
             ]);
         }
 
-        info("request data", $request->all());
-
         $message_data = $request->only(["content", "reply_to_message_id"]);
         $message_data["conversation_id"] = $id;
         $message_data["user_id"] = $request->user()->id;
 
         $message = Message::create($message_data);
-        
-        if ($request->hasFile("medias")) {
-            $medias = $request->file("medias");
-            foreach ($medias as $media) {
-                $media_name = time() . "_" . $media->getClientOriginalName();
-                $media_path = $media->storeAs("uploads", $media_name, "public");
-                $message->medias()->create([
-                    "message_id" => $message->id,
-                    "path" => url(Storage::url($media_path)),
-                    "type" => $media->getMimeType(),
-                ]);
-            }
-        }
 
-        return (new MessageResource($message))->additional([
-            "message" => "Message sent successfully",
+        MessageService::handleMediaUploads($message, $request);
+
+        return MessageResource::make($message)->additional([
+            "message" => "Message created successfully",
             "status" => 201,
         ]);
     }
@@ -58,48 +49,44 @@ class MessageController extends Controller
     public function show($id)
     {
         $message = Message::findOrfail($id);
-        return (new MessageResource($message))->additional([
-            "message" => "Message retrieved successfully",
+        return MessageResource::make($message)->additional([
             "status" => 200,
         ]);
     }
 
     public function update(Request $request, $id)
     {
+
+        $validator = Validator::make($request->all(), [
+            "content" => "nullable|string",
+            "medias" => "nullable|array",
+            "medias.*" => "nullable|file",
+            "deleted_medias" => "nullable|array",
+            "deleted_medias.*" => "nullable|exists:message_medias,id",
+        ], [
+            "content.string" => "ERR_INVALID_CONTENT",
+            "medias.array" => "ERR_INVALID_MEDIAS",
+            "medias.*.file" => "ERR_INVALID_MEDIA_FILE",
+            "deleted_medias.array" => "ERR_INVALID_DELETED_MEDIAS",
+            "deleted_medias.*.exists" => "ERR_INVALID_DELETED_MEDIA_ID",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
+        }
+
         $message = Message::findOrfail($id);
         $message->update($request->all());
         $message->is_edited = true;
         $message->save();
 
-        if ($request->has("medias")) {
+        MessageService::handleMediaUploads($message, $request);
 
-            $medias = $request->file("medias");
-            foreach ($medias as $media) {
-                $media_name = time() . "_" . $media->getClientOriginalName();
-                $media_path = $media->storeAs("uploads", $media_name, "public");
-                $message->medias()->create([
-                    "message_id" => $message->id,
-                    "path" => url(Storage::url($media_path)),
-                    "type" => $media->getMimeType(),
-                ]);
-            }
-        }
-
-        if ($request->has("deleted_medias")) {
-            $deleted_medias = $request->input("deleted_medias");
-            foreach ($deleted_medias as $media_id) {
-                $media = $message->medias()->find($media_id);
-                if ($media) {
-                    if ($media->path) {
-                        $mediaPath = str_replace("/storage/", "", $media->path);
-                        Storage::disk("public")->delete($mediaPath);
-                    }
-                    $media->delete();
-                }
-            }
-        }
-
-        return (new MessageResource($message))->additional([
+        return MessageResource::make($message)->additional([
             "message" => "Message updated successfully",
             "status" => 200,
         ]);
@@ -119,7 +106,7 @@ class MessageController extends Controller
     {
         $message = Message::withTrashed()->findOrfail($id);
         $message->restore();
-        return (new MessageResource($message))->additional([
+        return MessageResource::make($message)->additional([
             "message" => "Message restored successfully",
             "status" => 200,
         ]);

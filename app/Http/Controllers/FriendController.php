@@ -25,25 +25,25 @@ class FriendController extends Controller
     /**
      * Kiểm tra xem 2 user có phải bạn bè không
      */
-    public function checkFriendship($userId1, $userId2)
-    {
-        $isFriend = \DB::table('relationships')
-            ->where(function($query) use ($userId1, $userId2) {
-                $query->where('user_id', $userId1)
-                      ->where('related_user_id', $userId2);
-            })
-            ->orWhere(function($query) use ($userId1, $userId2) {
-                $query->where('user_id', $userId2)
-                      ->where('related_user_id', $userId1);
-            })
-            ->where('type', 'friend')
-            ->exists();
+    // public function checkFriendship($userId1, $userId2)
+    // {
+    //     $isFriend = \DB::table('relationships')
+    //         ->where(function($query) use ($userId1, $userId2) {
+    //             $query->where('user_id', $userId1)
+    //                   ->where('related_user_id', $userId2);
+    //         })
+    //         ->orWhere(function($query) use ($userId1, $userId2) {
+    //             $query->where('user_id', $userId2)
+    //                   ->where('related_user_id', $userId1);
+    //         })
+    //         ->where('type', 'friend')
+    //         ->exists();
             
-        return response()->json([
-            'success' => true,
-            'user1_id' => $userId1,
-            'user2_id' => $userId2,
-            'are_friends' => $isFriend
-        ]);
-    }
+    //     return response()->json([
+    //         'success' => true,
+    //         'user1_id' => $userId1,
+    //         'user2_id' => $userId2,
+    //         'are_friends' => $isFriend
+    //     ]);
+    // }
 }

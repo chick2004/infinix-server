@@ -15,6 +15,10 @@ class Notification extends Model
         'url',
     ];
 
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
+
     public function receiver()
     {
         return $this->belongsTo(User::class, 'receiver_id');

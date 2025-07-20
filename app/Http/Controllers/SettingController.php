@@ -26,7 +26,7 @@ class SettingController extends Controller
             ]);
         }
 
-        return (new SettingResource($setting))->additional([
+        return SettingResource::make($setting)->additional([
             "status" => 200,
         ]);
     }
@@ -49,6 +49,19 @@ class SettingController extends Controller
             "password" => "string|min:8|confirmed|nullable",
             "theme" => "string|in:light,dark,system|nullable",
             "language" => "string|in:en,vi|nullable",
+        ], [
+            "display_name.string" => "ERR_INVALID_DISPLAY_NAME",
+            "bio.string" => "ERR_INVALID_BIO",
+            "date_of_birth.date" => "ERR_INVALID_DATE_OF_BIRTH",
+            "cover_photo.image" => "ERR_INVALID_COVER_PHOTO",
+            "profile_photo.image" => "ERR_INVALID_PROFILE_PHOTO",
+            "username.string" => "ERR_INVALID_USERNAME",
+            "username.unique" => "ERR_USERNAME_TAKEN",
+            "email.email" => "ERR_INVALID_EMAIL",
+            "phone_number.string" => "ERR_INVALID_PHONE_NUMBER",
+            "password.string" => "ERR_INVALID_PASSWORD",
+            "theme.in" => "ERR_INVALID_THEME",
+            "language.in" => "ERR_INVALID_LANGUAGE",
         ]);
 
         if ($validator->fails()) {
@@ -73,12 +86,12 @@ class SettingController extends Controller
         $user->update($request->only(['username', 'email', 'phone_number']));
 
         if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+            $user->password = Hash::make($request->input());
             $user->save();
         }
 
         info("Profile updated successfully", $user->profile->toArray());
-        return (new SettingResource($user->setting))->additional([
+        return SettingResource::make($user->setting)->additional([
             "status" => 200,
         ]);
     }

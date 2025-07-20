@@ -26,6 +26,11 @@ class ConversationController extends Controller
                 "image" => "required|image",
                 "users" => "array",
                 "users.*" => "exists:users,id",
+            ], [
+                "name.required" => "ERR_REQUIRED",
+                "image.required" => "ERR_IMAGE_REQUIRED",
+                "users.array" => "ERR_USERS_ARRAY",
+                "users.*.exists" => "ERR_USER_NOT_FOUND",
             ]);
 
             if ($validator->fails()) {
@@ -50,14 +55,16 @@ class ConversationController extends Controller
 
             $conversation->users()->attach($request->input("users"));
             $conversation->users()->attach($request->user()->id, ['is_admin' => true]);
-            return response()->json([
-                "message" => "Group conversation created successfully",
-                "data" => new ConversationResource($conversation),
+            return ConversationResource::make($conversation)->additional([
+                "message" => "Conversation created successfully",
                 "status" => 201,
             ]);
         } else {
             $validator = Validator::make($request->all(), [
                 "with_user" => "required|exists:users,id",
+            ], [
+                "with_user.required" => "ERR_REQUIRED",
+                "with_user.exists" => "ERR_USER_NOT_FOUND",
             ]);
 
             if ($validator->fails()) {
@@ -80,6 +87,9 @@ class ConversationController extends Controller
             if ($conversation) {
                 return response()->json([
                     "message" => "Conversation already exists",
+                    "errors" => [
+                        "conversation" => "ERR_CONVERSATION_EXISTS",
+                    ],
                     "status" => 409,
                 ]);
             }
@@ -90,9 +100,8 @@ class ConversationController extends Controller
 
             $conversation->users()->attach([$request->user()->id, $request->input("with_user")]);
 
-            return response()->json([
+            return ConversationResource::make($conversation)->additional([
                 "message" => "Conversation created successfully",
-                "data" => new ConversationResource($conversation),
                 "status" => 201,
             ]);
         }
@@ -101,9 +110,7 @@ class ConversationController extends Controller
     public function show($id)
     {
         $conversation = Conversation::findOrFail($id);
-        return response()->json([
-            "message" => "",
-            "data" => new ConversationResource($conversation),
+        return ConversationResource::make($conversation)->additional([
             "status" => 200,
         ]);
     }
@@ -117,6 +124,11 @@ class ConversationController extends Controller
             "image" => "image",
             "users" => "array",
             "users.*" => "exists:users,id",
+        ], [
+            "name.string" => "ERR_INVALID_NAME",
+            "image.image" => "ERR_INVALID_IMAGE",
+            "users.array" => "ERR_USERS_ARRAY",
+            "users.*.exists" => "ERR_USER_NOT_FOUND",
         ]);
 
         if ($validator->fails()) {
@@ -133,9 +145,8 @@ class ConversationController extends Controller
             $conversation->users()->sync($request->input("users"));
         }
 
-        return response()->json([
+        return ConversationResource::make($conversation)->additional([
             "message" => "Conversation updated successfully",
-            "data" => new ConversationResource($conversation),
             "status" => 200,
         ]);
     }
@@ -156,9 +167,7 @@ class ConversationController extends Controller
             $query->where("user_id", $id);
         })->get();
         
-        return response()->json([
-            "message" => "",
-            "data" => ConversationResource::collection($conversations),
+        return ConversationResource::collection($conversations)->additional([
             "status" => 200,
         ]);
     }
@@ -170,9 +179,7 @@ class ConversationController extends Controller
                 $query->where("user_id", $id);
             })->get();
 
-        return response()->json([
-            "message" => "",
-            "data" => ConversationResource::collection($conversations),
+        return ConversationResource::collection($conversations)->additional([
             "status" => 200,
         ]);
     }
@@ -180,9 +187,7 @@ class ConversationController extends Controller
     public function users($id)
     {
         $conversation = Conversation::findOrFail($id);
-        return response()->json([
-            "message" => "",
-            "data" => UserResource::collection($conversation->users),
+        return UserResource::collection($conversation->users)->additional([
             "status" => 200,
         ]);
     }
@@ -205,9 +210,7 @@ class ConversationController extends Controller
             $conversation->users()->attach([$request->user()->id, $id]);
 
         }
-        return response()->json([
-            "message" => "",
-            "data" => new ConversationResource($conversation),
+        return ConversationResource::make($conversation)->additional([
             "status" => 200,
         ]);
     }

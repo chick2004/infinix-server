@@ -20,9 +20,8 @@ class AuthController extends Controller
 {
     public function user(Request $request) 
     {
-        return response()->json([
-            "message" => "",
-            "data" => new UserResource($request->user()),
+        $user = $request->user();
+        return UserResource::make($user)->additional([
             "status" => 200,
         ]);
     }
@@ -43,6 +42,10 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             "email" => "required|email",
             "password" => "required",
+        ], [
+            "email.required" => "ERR_REQUIRED",
+            "email.email" => "ERR_EMAIL_FORMAT",
+            "password.required" => "ERR_REQUIRED",
         ]);
 
         if ($validator->fails()) {
@@ -53,24 +56,32 @@ class AuthController extends Controller
             ]);
         }
 
-        if (!Auth::attempt($request->only("email", "password")) || User::where("email", $request->email)->doesntExist()) {
+        if (User::where("email", $request->input("email"))->doesntExist()) {
+            return response()->json([
+                "message" => "User not found",
+                "errors" => [
+                    "email" => ["ERR_USER_NOT_FOUND"],
+                ],
+                "status" => 404,
+            ]);
+        }
+
+        if (!Auth::attempt($request->only("email", "password"))) {
             return response()->json([
                 "message" => "Invalid login details",
                 "errors" => [
-                    "email" => "The provided credentials do not match our records.",
+                    "password" => ["ERR_INVALID_LOGIN"],
                 ],
                 "status" => 401,
             ]);
         }
 
         $request->session()->regenerate();
+        $user = $request->user();
 
-        return response()->json([
-            "message" => "login successful",
-            "data" => new UserResource($request->user()),
-            "status"=> 200,
+        return UserResource::make($user)->additional([
+            "status" => 200,
         ]);
-
     }
 
     public function register(Request $request)
@@ -79,6 +90,11 @@ class AuthController extends Controller
             "email" => "required|email",
             "password" => "required",
             "code" => "required",
+        ], [
+            "email.required" => "ERR_REQUIRED",
+            "email.email" => "ERR_EMAIL_FORMAT",
+            "password.required" => "ERR_REQUIRED",
+            "code.required" => "ERR_REQUIRED",
         ]);
 
         if ($validator->fails()) {
@@ -89,13 +105,13 @@ class AuthController extends Controller
             ]);
         }
 
-        $verification_code = VerificationCode::where("email", $request->email)->where("code", $request->code);
+        $verification_code = VerificationCode::where("email", $request->input("email"))->where("code", $request->input("code"));
         
         if (!$verification_code->exists()) {
             return response()->json([
                 "message" => "Invalid code",
                 "errors" => [
-                    "code" => "The provided verification code is invalid.",
+                    "code" => ["ERR_INVALID_CODE"],
                 ],
                 "status" => 422,
             ]);
@@ -104,12 +120,12 @@ class AuthController extends Controller
         $verification_code->delete();
 
         $user = User::create([
-            "email" => $request->email,
-            "password" => Hash::make($request->password),
-            "username" => explode("@", $request->email)[0],
+            "email" => $request->input("email"),
+            "password" => Hash::make($request->input("password")),
+            "username" => explode("@", $request->input("email"))[0],
         ]);
 
-        $display_name = $request->display_name ?? preg_replace("/[^a-zA-Z0-9]/", "", explode("@", $request->email)[0])."_".Str::random(5);
+        $display_name = $request->display_name ?? preg_replace("/[^a-zA-Z0-9]/", "", explode("@", $request->input("email"))[0])."_".Str::random(5);
 
         $user->profile()->create([
             "display_name" => $display_name,
@@ -118,10 +134,9 @@ class AuthController extends Controller
         Auth::attempt($request->only("email", "password"));
 
         $request->session()->regenerate();
+        $user = $request->user();
 
-        return response()->json([
-            "message" => "register successful",
-            "data" => new UserResource($request->user()),
+        return UserResource::make($user)->additional([
             "status" => 201,
         ]);
     }
@@ -141,43 +156,69 @@ class AuthController extends Controller
 
     public function send_verification_code(Request $request)
     {
-        $request->validate([
+
+        $validator = Validator::make($request->all(), [
             "email" => "required|email",
+        ], [
+            "email.required" => "ERR_REQUIRED",
+            "email.email" => "ERR_EMAIL_FORMAT",
         ]);
 
-        if (User::where("email", $request->email)->exists()) {
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
+        }
+
+        if (User::where("email", $request->input("email"))->exists()) {
             return response()->json([
                 "message" => "Email already exists",
                 "errors" => [
-                    "email" => "The provided email is already registered.",
+                    "email" => ["ERR_EMAIL_ALREADY_EXISTS"],
                 ],
                 "status" => 422,
             ]);
         }
 
-        $code = VerificationCode::generate($request->email);
+        $code = VerificationCode::generate($request->input("email"));
 
-        Mail::to($request->email)->send(new VerificationEmail($code));
+        Mail::to($request->input("email"))->send(new VerificationEmail($code));
 
         return response()->json([
-            "message" => "Verification code sent"
-        ], 200);
+            "message" => "Verification code sent",
+            "status" => 200,
+        ]);
     }
 
     public function verify_code(Request $request)
     {
-        $request->validate([
+
+        $validator = Validator::make($request->all(), [
             "email" => "required|email",
             "code" => "required",
+        ], [
+            "email.required" => "ERR_REQUIRED",
+            "email.email" => "ERR_EMAIL_FORMAT",
+            "code.required" => "ERR_REQUIRED",
         ]);
 
-        $verification_code = VerificationCode::where("email", $request->email)->where("code", $request->code);
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
+        }
+
+        $verification_code = VerificationCode::where("email", $request->input("email"))->where("code", $request->input("code"));
         
         if (!$verification_code->exists()) {
             return response()->json([
                 "message" => "Invalid code",
                 "errors" => [
-                    "code" => "The provided verification code is invalid.",
+                    "code" => ["ERR_INVALID_CODE"],
                 ],
                 "status" => 422,
             ]);
@@ -191,13 +232,26 @@ class AuthController extends Controller
 
     public function reset_password(Request $request)
     {
-        $request->validate([
+
+        $validator = Validator::make($request->all(), [
             "email" => "required|email",
             "password" => "required",
+        ], [
+            "email.required" => "ERR_REQUIRED",
+            "email.email" => "ERR_EMAIL_FORMAT",
+            "password.required" => "ERR_REQUIRED",
         ]);
 
-        $user = User::where("email", $request->email)->firstOrFail();
-        $user->password = Hash::make($request->password);
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
+        }
+
+        $user = User::where("email", $request->input("email"))->firstOrFail();
+        $user->password = Hash::make($request->input("password"));
         $user->save();
 
         return response()->json([
@@ -208,18 +262,26 @@ class AuthController extends Controller
 
     public function verify_current_password(Request $request)
     {
-        $request->validate([
+
+        $validator = Validator::make($request->all(), [
             "current_password" => "required",
+        ], [
+            "current_password.required" => "ERR_REQUIRED",
         ]);
 
-        if (!Hash::check($request->current_password, $request->user()->password)) {
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
+        }
+
+        if (!Hash::check($request->input("current_password"), $request->user()->password)) {
             return response()->json([
                 "message" => "Invalid password",
                 "errors" => [
-                    "current_password" => [
-                        "code" => "INVALID_PASSWORD",
-                        "message" => "The provided password is incorrect.",
-                    ],
+                    "current_password" => ["ERR_INVALID_PASSWORD"],
                 ],
                 "status" => 422,
             ]);
@@ -233,26 +295,36 @@ class AuthController extends Controller
 
     public function change_password(Request $request)
     {
-        $request->validate([
+
+        $validator = Validator::make($request->all(), [
             "current_password" => "required",
-            "new_password" => "required",
+            "new_password" => "required|min:8",
+        ], [
+            "current_password.required" => "ERR_REQUIRED",
+            "new_password.required" => "ERR_REQUIRED",
+            "new_password.min" => "ERR_PASSWORD_MIN_LENGTH",
         ]);
 
-        if (!Hash::check($request->current_password, $request->user()->password)) {
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
+        }
+
+        if (!Hash::check($request->input("current_password"), $request->user()->password)) {
             return response()->json([
                 "message" => "Invalid current password",
                 "errors" => [
-                    "current_password" => [
-                        "code" => "INVALID_PASSWORD",
-                        "message" => "The provided current password is incorrect.",
-                    ],
+                    "current_password" => ["ERR_INVALID_PASSWORD"],
                 ],
                 "status" => 422,
             ]);
         }
 
         $user = $request->user();
-        $user->password = Hash::make($request->new_password);
+        $user->password = Hash::make($request->input("current_password"));
         $user->save();
 
         return response()->json([
@@ -265,9 +337,7 @@ class AuthController extends Controller
     {
         $user = User::findOrFail($id);
 
-        return response()->json([
-            "message" => "",
-            "data" => new UserResource($user),
+        return UserResource::make($user)->additional([
             "status" => 200,
         ]);
     }

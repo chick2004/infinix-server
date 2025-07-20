@@ -18,6 +18,9 @@ class FriendRequestController extends Controller
     {
         $validator = Validator::make($request->all(), [
             "receiver_id" => "required|exists:users,id",
+        ], [
+            "receiver_id.required" => "ERR_REQUIRED",
+            "receiver_id.exists" => "ERR_USER_NOT_FOUND",
         ]);
 
         if ($validator->fails()) {
@@ -34,7 +37,7 @@ class FriendRequestController extends Controller
 
         $friend_request = FriendRequest::create($friend_request_data);
 
-        return (new FriendRequestResource($friend_request))->additional([
+        return FriendRequestResource::make($friend_request)->additional([
             "message" => "Friend request sent successfully",
             "status" => 201,
         ]);
@@ -43,9 +46,8 @@ class FriendRequestController extends Controller
     public function show($id)
     {
         $friend_request = FriendRequest::findOrFail($id);
-        return (new FriendRequestResource($friend_request))->additional([
-            "message" => "Friend request sent successfully",
-            "status" => 201,
+        return FriendRequestResource::make($friend_request)->additional([
+            "status" => 200,
         ]);
     }
 
@@ -55,6 +57,9 @@ class FriendRequestController extends Controller
 
         $validator = Validator::make($request->all(), [
             "status" => "required|in:accepted,rejected",
+        ], [
+            "status.required" => "ERR_REQUIRED",
+            "status.in" => "ERR_INVALID_STATUS",
         ]);
 
         if ($validator->fails()) {
@@ -67,8 +72,8 @@ class FriendRequestController extends Controller
         $status = $request->input("status");
         if ($status == "accepted") {
             $relationship_data = [
-                "user_id" => $friend_request->sender_id,
-                "related_user_id" => $friend_request->receiver_id,
+                "user_id" => $friend_request->input("sender_id"),
+                "related_user_id" => $friend_request->input("receiver_id"),
                 "type" => "friend",
             ];
             Relationship::create($relationship_data);
@@ -77,7 +82,7 @@ class FriendRequestController extends Controller
             $friend_request->delete();
         }
 
-        return (new FriendRequestResource($friend_request))->additional([
+        return FriendRequestResource::make($friend_request)->additional([
             "message" => "Friend request updated successfully",
             "status" => 200,
         ]);

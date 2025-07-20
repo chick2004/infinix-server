@@ -9,6 +9,7 @@ use App\Models\Post;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Services\PostService;
 
 use App\Models\Tag;
 
@@ -19,15 +20,13 @@ class PostController extends Controller
         $posts = Post::withTrashed()->orderBy("created_at", "desc")->paginate(20);
         return PostResource::collection($posts)->additional([
             "status" => 200,
-            "message" => "Posts retrieved successfully",
         ]);
     }
 
     public function show($id)
     {
         $post = Post::withTrashed()->findOrFail($id);
-        return response()->json([
-            "data" => new PostResource($post),
+        return PostResource::make($post)->additional([
             "status" => 200,
         ]);
     }
@@ -42,6 +41,13 @@ class PostController extends Controller
             "shared_post_id" => "nullable|exists:posts,id",
             "medias" => "nullable|array",
             "medias.*" => "nullable|file",
+        ], [
+            "content.string" => "ERR_INVALID_CONTENT",
+            "visibility.in" => "ERR_INVALID_VISIBILITY",
+            "is_shared.boolean" => "ERR_INVALID_IS_SHARED",
+            "shared_post_id.exists" => "ERR_INVALID_SHARED_POST_ID",
+            "medias.array" => "ERR_INVALID_MEDIAS",
+            "medias.*.file" => "ERR_INVALID_MEDIA_FILE",
         ]);
 
         if ($validator->fails()) {
@@ -58,29 +64,11 @@ class PostController extends Controller
 
         $post = Post::create($post_data);
 
-        preg_match_all("/#\w+/", $request->input("content"), $matches);
-        $tag_list = $matches[0];
-        foreach ($tag_list as $tag_item) {
-            $tag = Tag::firstOrCreate(["name" => str_replace("#", "", $tag_item)]);
-            $post->tags()->attach($tag->id);
-        }
+        PostService::handleExtractTags($post);
+        PostService::handleMediaUploads($post, $request);
 
-        if ($request->hasFile("medias")) {
-            $medias = $request->file("medias");
-            foreach ($medias as $media) {
-                $media_name = time() . "_" . $media->getClientOriginalName();
-                $media_path = $media->storeAs("uploads", $media_name, "public");
-                $post->medias()->create([
-                    "post_id" => $post->id,
-                    "path" => url(Storage::url($media_path)),
-                    "type" => $media->getMimeType(),
-                ]);
-            }
-        }
-
-        return response()->json([
+        return PostResource::make($post)->additional([
             "message" => "Post created successfully",
-            "data" => new PostResource($post),
             "status" => 201,
         ]);
     }
@@ -88,49 +76,40 @@ class PostController extends Controller
     public function update(Request $request, $id)
     {
 
+        $validator = Validator::make($request->all(), [
+            "content" => "nullable|string",
+            "visibility" => "nullable|in:public,private,friends",
+            "is_shared" => "nullable|boolean",
+            "shared_post_id" => "nullable|exists:posts,id",
+            "medias" => "nullable|array",
+            "medias.*" => "nullable|file",
+        ], [
+            "content.string" => "ERR_INVALID_CONTENT",
+            "visibility.in" => "ERR_INVALID_VISIBILITY",
+            "is_shared.boolean" => "ERR_INVALID_IS_SHARED",
+            "shared_post_id.exists" => "ERR_INVALID_SHARED_POST_ID",
+            "medias.array" => "ERR_INVALID_MEDIAS",
+            "medias.*.file" => "ERR_INVALID_MEDIA_FILE",
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => "Invalid request data",
+                "errors" => $validator->errors(),
+                "status" => 422,
+            ]);
+        }
+
         $post = Post::withTrashed()->findOrFail($id);
         $post->update($request->only(["content", "visibility", "is_shared", "shared_post_id"]));
 
         $post->tags()->detach();
 
-        preg_match_all("/#\w+/", $request->input("content"), $matches);
-        $tag_list = $matches[0];
-        foreach ($tag_list as $tag_item) {
-            $tag = Tag::firstOrCreate(["name" => str_replace("#", "", $tag_item)]);
-            $post->tags()->attach($tag->id);
-        }
+        PostService::handleExtractTags($post);
+        PostService::handleMediaUploads($post, $request);
 
-        if ($request->has("medias")) {
-
-            $medias = $request->file("medias");
-            foreach ($medias as $media) {
-                $media_name = time() . "_" . $media->getClientOriginalName();
-                $media_path = $media->storeAs("uploads", $media_name, "public");
-                $post->medias()->create([
-                    "post_id" => $post->id,
-                    "path" => url(Storage::url($media_path)),
-                    "type" => $media->getMimeType(),
-                ]);
-            }
-        }
-
-        if ($request->has("deleted_medias")) {
-            $deleted_medias = $request->input("deleted_medias");
-            foreach ($deleted_medias as $media_id) {
-                $media = $post->medias()->find($media_id);
-                if ($media) {
-                    if ($media->path) {
-                        $mediaPath = str_replace("/storage/", "", $media->path);
-                        Storage::disk("public")->delete($mediaPath);
-                    }
-                    $media->delete();
-                }
-            }
-        }
-
-        return response()->json([
+        return PostResource::make($post)->additional([
             "message" => "Post updated successfully",
-            "data" => new PostResource($post),
             "status" => 200,
         ]);
     }
@@ -162,9 +141,8 @@ class PostController extends Controller
         $post = Post::withTrashed()->findOrFail($id);
         $post->restore();
 
-        return response()->json([
+        return PostResource::make($post)->additional([
             "message" => "Post restored successfully",
-            "data" => new PostResource($post),
             "status" => 200,
         ]);
     }
@@ -175,8 +153,7 @@ class PostController extends Controller
             $query->where("tag", $tag);
         })->orderBy("created_at", "desc")->paginate(20);
 
-        return response()->json([
-            "data" => PostResource::collection($posts),
+        return PostResource::collection($posts)->additional([
             "status" => 200,
         ]);
     }
@@ -185,8 +162,7 @@ class PostController extends Controller
     {
         $posts = Post::where("user_id", $user_id)->orderBy("created_at", "desc")->paginate(20);
 
-        return response()->json([
-            "data" => PostResource::collection($posts),
+        return PostResource::collection($posts)->additional([
             "status" => 200,
         ]);
     }

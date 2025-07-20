@@ -24,6 +24,9 @@ class BookmarkController extends Controller
     {
         $validatior = Validator::make($request->all(), [
             "post_id" => "required|exists:posts,id",
+        ], [
+            "post_id.required" => "ERR_REQUIRED",
+            "post_id.exists" => "ERR_POST_NOT_FOUND",
         ]);
 
         if ($validatior->fails()) {
@@ -36,14 +39,14 @@ class BookmarkController extends Controller
 
         $user = $request->user();
 
-        if ($user->bookmarks()->where('post_id', $request->post_id)->exists()) {
-            $user->bookmarks()->where('post_id', $request->post_id)->delete();
+        if ($user->bookmarks()->where('post_id', $request->input("post_id"))->exists()) {
+            $user->bookmarks()->where('post_id', $request->input("post_id"))->delete();
             return response()->json([
                 "message" => "Bookmark removed",
                 "status" => 200,
             ]);
         } else {
-            $user->bookmarks()->create(['post_id' => $request->post_id]);
+            $user->bookmarks()->create(['post_id' => $request->input("post_id")]);
             return response()->json([
                 "message" => "Bookmark added",
                 "status" => 201,
@@ -72,8 +75,7 @@ class BookmarkController extends Controller
             $posts[] = $bookmark->post;
         }
 
-        return response()->json([
-            "data" => PostResource::collection($posts),
+        return PostResource::collection($posts)->additional([
             "status" => 200,
         ]);
     }
