@@ -10,6 +10,8 @@ class ConversationNotification extends Model
     protected $fillable = [
         'receiver_id',
         'conversation_id',
+        'sender_id',
+        'message_id',
         'type',
         'is_read',
     ];

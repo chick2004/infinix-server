@@ -10,9 +10,9 @@ class Notification extends Model
     protected $fillable = [
         'receiver_id',
         'trigger_id',
+        'reference_id',
         'type',
         'is_read',
-        'url',
     ];
 
     protected $casts = [

@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('receiver_id')->constrained()->onDelete('cascade');
-            $table->foreignId('trigger_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['like', 'comment', 'follow', 'mention', 'reply', 'send_friend_request', 'accept_friend_request']);
+            $table->foreignId('receiver_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('trigger_id')->constrained('users')->onDelete('cascade');
+            $table->enum('type', ['create_post', 'like_post', 'comment_post', 'follow', 'mention', 'reply', 'send_friend_request', 'accept_friend_request']);
+            $table->unsignedBigInteger('reference_id');
             $table->boolean('is_read')->default(false);
-            $table->string('url')->nullable();
             $table->timestamps();
         });
     }

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Comment;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Services\CommentService;
 
 class CommentController extends Controller
 {
@@ -48,17 +49,8 @@ class CommentController extends Controller
 
         $comment = Comment::create($comment_data);
 
-        if ($request->hasFile("media")) {
-            $media = $request->file("media")[0];
-            $media_name = time() . "_" . $media->getClientOriginalName();
-            $media_path = $media->storeAs("uploads", $media_name, "public");
-            $comment->media()->create([
-                "post_id" => $comment->id,
-                "path" => url(Storage::url($media_path)),
-                "type" => $media->getMimeType(),
-            ]);
-        }
-
+        CommentService::handleMedias($comment, $request);
+        
         return CommentResource::make($comment)->additional([
             "message" => "Comment created successfully",
             "status" => 201,
@@ -91,18 +83,7 @@ class CommentController extends Controller
             $comment->content = $request->input("content");
         }
 
-        if ($request->hasFile("media")) {
-            Storage::disk("public")->delete(str_replace("/storage/", "", $comment->media()->first()?->path));
-            $comment->media()->delete();
-            $media = $request->file("media")[0];
-            $media_name = time() . "_" . $media->getClientOriginalName();
-            $media_path = $media->storeAs("uploads", $media_name, "public");
-            $comment->media()->create([
-                "post_id" => $comment->id,
-                "path" => url(Storage::url($media_path)),
-                "type" => $media->getMimeType(),
-            ]);
-        }
+        CommentService::handleMedias($comment, $request);
 
         if ($request->input("remove_media") && $comment->media()->exists()) {
             Storage::disk("public")->delete(str_replace("/storage/", "", $comment->media()->first()?->path));

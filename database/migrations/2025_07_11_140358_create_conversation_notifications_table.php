@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('conversation_notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('receiver_id')->constrained()->onDelete('cascade');
+            $table->foreignId('receiver_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('conversation_id')->constrained()->onDelete('cascade');
+            $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('message_id')->constrained('messages')->onDelete('cascade');
             $table->enum('type', ['message', 'mention', 'reaction']);
             $table->boolean('is_read')->default(false);
-
             $table->timestamps();
         });
     }

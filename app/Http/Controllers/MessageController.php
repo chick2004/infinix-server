@@ -38,7 +38,7 @@ class MessageController extends Controller
 
         $message = Message::create($message_data);
 
-        MessageService::handleMediaUploads($message, $request);
+        MessageService::handleMedias($message, $request);
 
         return MessageResource::make($message)->additional([
             "message" => "Message created successfully",
@@ -84,7 +84,7 @@ class MessageController extends Controller
         $message->is_edited = true;
         $message->save();
 
-        MessageService::handleMediaUploads($message, $request);
+        MessageService::handleMedias($message, $request);
 
         return MessageResource::make($message)->additional([
             "message" => "Message updated successfully",

@@ -4,7 +4,7 @@ namespace App\Services;
 
 class MessageService
 {
-    public static function handleMediaUploads($message, $request)
+    public static function handleMedias($message, $request)
     {
         if ($request->hasFile("medias")) {
             $medias = $request->file("medias");

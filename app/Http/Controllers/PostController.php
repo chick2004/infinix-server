@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Services\PostService;
+use App\Models\Notification;
 
 use App\Models\Tag;
 
@@ -64,8 +65,9 @@ class PostController extends Controller
 
         $post = Post::create($post_data);
 
-        PostService::handleExtractTags($post);
-        PostService::handleMediaUploads($post, $request);
+        PostService::extractTags($post);
+        PostService::handleMedias($post, $request);
+        PostService::notifyCreatePost($post, $request->user());
 
         return PostResource::make($post)->additional([
             "message" => "Post created successfully",
@@ -105,8 +107,8 @@ class PostController extends Controller
 
         $post->tags()->detach();
 
-        PostService::handleExtractTags($post);
-        PostService::handleMediaUploads($post, $request);
+        PostService::extractTags($post);
+        PostService::handleMedias($post, $request);
 
         return PostResource::make($post)->additional([
             "message" => "Post updated successfully",
@@ -180,6 +182,9 @@ class PostController extends Controller
             ]);
         } else {
             $post->likes()->create(['user_id' => $user->id]);
+
+            PostService::notifyLikePost($post, $user);
+
             return response()->json([
                 "message" => "Post liked",
                 "status" => 201,
